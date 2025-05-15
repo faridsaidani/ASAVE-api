@@ -1,0 +1,16 @@
+[
+  {
+    "rule_id": "SR-GHARAR-001",
+    "standard_ref": "General Shari'ah Principle / AAOIFI SS on Gharar",
+    "principle_keywords": ["gharar", "uncertainty", "speculation", "contractual ambiguity"],
+    "description": "Contracts must be free from excessive uncertainty (Gharar) that could lead to disputes. Key elements like subject matter, price, and delivery terms must be clearly defined and ascertainable.",
+    "validation_query_template": "Review the following text: '{suggestion_text}'. Does this text, when considered for inclusion in a financial standard, introduce, permit, or fail to mitigate excessive uncertainty (Gharar) related to '{specific_aspect}'? Provide a 'Compliant', 'Non-Compliant', or 'Potentially Non-Compliant' assessment with a brief explanation based on the principle of minimizing Gharar."
+  },
+  {
+    "rule_id": "SR-RIBA-001",
+    "standard_ref": "General Shari'ah Principle / AAOIFI SS on Riba",
+    "principle_keywords": ["riba", "interest", "usury", "loan", "excess"],
+    "description": "Any predetermined excess or surplus over and above the principal amount in a loan or exchange of specific commodities is Riba and is prohibited.",
+    "validation_query_template": "Analyze the following text: '{suggestion_text}'. Does this proposed text, particularly concerning '{specific_aspect}', directly or indirectly permit, facilitate, or fail to prevent Riba (interest or prohibited excess)? Provide a 'Compliant', 'Non-Compliant', or 'Potentially Non-Compliant' assessment with a brief explanation."
+  }
+]
