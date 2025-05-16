@@ -685,6 +685,270 @@ def extract_text_from_pdf_file_api():
         logger.error(f"Error extracting text/images from PDF: {e}", exc_info=True)
         return jsonify({"status": "error", "message": f"Failed to process PDF: {str(e)}"}), 500
 
+def process_agent_task(agent_instance, method_name: str, task_description: str, **kwargs) -> dict:
+    """
+    Helper function to call agent methods, designed for use with ThreadPoolExecutor.
+    It standardizes the output to include status, task description, agent type,
+    and either the result or an error message.
+
+    Args:
+        agent_instance: The instance of the agent to call.
+        method_name (str): The name of the method to call on the agent instance.
+        task_description (str): A descriptive string for this task (for logging/tracking).
+        **kwargs: Keyword arguments to pass to the agent's method.
+
+    Returns:
+        dict: A dictionary containing:
+              - "status": "success" or "error"
+              - "task": The provided task_description
+              - "agent_type": The class name of the agent (or a defined agent_type attribute)
+              - "agent_name_variant": The specific variant name if applicable (e.g., from AISGA variants)
+              - "result": The result from the agent method if successful.
+              - "error": The error message if an error occurred.
+              - "prompt_details_actual": If the result itself contains this key (from AISGA etc.)
+                                         it will be part of the 'result' dict.
+    """
+    # Try to get a more specific agent type/name for logging
+    agent_class_name = type(agent_instance).__name__
+    # Some of your agents (like AISGA variants or specialized agents) might have an 'agent_type' attribute
+    # or the variant_name might be passed in kwargs for AISGA.
+    specific_agent_name = kwargs.get("variant_name_override", None) # Check if explicitly passed
+    if not specific_agent_name: # If not overridden, try to get from instance or use class name
+        specific_agent_name = getattr(agent_instance, 'agent_type', agent_class_name)
+    
+    full_task_id = f"{task_description} (Agent: {specific_agent_name}, Method: {method_name})"
+    logger.info(f"EXECUTING Task: {full_task_id} with args: {list(kwargs.keys())}")
+
+    response_payload = {
+        "status": "error", # Default to error
+        "task": task_description,
+        "agent_type": agent_class_name, # e.g., SuggestionAgent, ValidationAgent
+        "agent_name_variant": specific_agent_name, # e.g., AISGA_ProDetailedConservative
+        "result": None,
+        "error": "Unknown error occurred."
+    }
+
+    try:
+        if not agent_instance:
+            response_payload["error"] = "Agent instance is None."
+            logger.error(f"FAILED Task: {full_task_id}. Reason: Agent instance is None.")
+            return response_payload
+
+        if not hasattr(agent_instance, method_name):
+            response_payload["error"] = f"Method '{method_name}' not found in agent '{agent_class_name}'."
+            logger.error(f"FAILED Task: {full_task_id}. Reason: Method not found.")
+            return response_payload
+
+        method_to_call = getattr(agent_instance, method_name)
+        
+        # Inspect the signature of the method to be called
+        sig = inspect.signature(method_to_call)
+        method_params = sig.parameters
+
+        # Prepare arguments for the method call, only passing what it accepts
+        call_kwargs = {}
+        for param_name, param_obj in method_params.items():
+            if param_name == 'self': # Skip 'self'
+                continue
+            if param_name in kwargs:
+                call_kwargs[param_name] = kwargs[param_name]
+            # If param has a default value and not in kwargs, it will use its default
+            # If param has no default and not in kwargs, it will raise TypeError (which is good)
+
+        # If 'variant_name_override' was in kwargs but not directly a param of the method,
+        # some agent methods (like AISGA's generate_clarification) might accept 'variant_name'.
+        # The AISGA `generate_clarification` was modified to accept `variant_name`.
+        # This logic is now handled more directly in the AISGA method itself if `variant_name` is passed.
+        # The `variant_name_override` in kwargs is primarily for identifying the task source.
+        
+        agent_result = method_to_call(**call_kwargs)
+
+        # Check if the agent_result itself indicates an error (some agents return dicts with "error" key)
+        if isinstance(agent_result, dict) and "error" in agent_result:
+            response_payload["error"] = agent_result["error"]
+            # If the agent's error payload also contains 'llm_response_received' or 'prompt_details_actual', include them for debugging
+            if "llm_response_received" in agent_result:
+                response_payload["llm_response_on_agent_error"] = agent_result["llm_response_received"]
+            if "prompt_details_actual" in agent_result: # If agent includes prompt details even on error
+                 response_payload["prompt_details_actual_on_agent_error"] = agent_result["prompt_details_actual"]
+            logger.warning(f"Task PARTIALLY FAILED (agent reported error): {full_task_id}. Agent Error: {agent_result['error']}")
+        else:
+            response_payload["status"] = "success"
+            response_payload["result"] = agent_result
+            response_payload["error"] = None # Clear default error
+            logger.info(f"COMPLETED Task: {full_task_id} successfully.")
+
+    except TypeError as te: # Catches errors from calling method with wrong args
+        error_msg = f"TypeError calling {method_name} on {specific_agent_name}: {te}. Check arguments."
+        logger.error(f"FAILED Task: {full_task_id}. Reason: {error_msg}", exc_info=True)
+        response_payload["error"] = error_msg
+    except Exception as e:
+        error_msg = f"General exception calling {method_name} on {specific_agent_name}: {e}"
+        logger.error(f"FAILED Task: {full_task_id}. Reason: {error_msg}", exc_info=True)
+        response_payload["error"] = error_msg
+
+    return response_payload
+
+
+# --- NEW STREAMING ENDPOINT for Shari'ah Contract Helper ---
+@app.route('/validate_contract_terms_stream', methods=['POST'])
+def validate_contract_terms_stream_api():
+    global asave_context, executor
+    logger.info("Received /validate_contract_terms_stream request.")
+
+    if not asave_context.get("initialized") or \
+       not asave_context.get("scva_iscca") or \
+       not asave_context.get("aisga_variants"):
+        def error_stream_init(): yield stream_event({"event_type": "fatal_error", "step": "INITIALIZATION", "message": "Core ASAVE components not initialized. Please call /initialize."})
+        return Response(stream_with_context(error_stream_init()), mimetype='text/event-stream', status=503)
+
+    try:
+        data = request.get_json()
+        if not data:
+            def error_stream_payload(): yield stream_event({"event_type": "fatal_error", "step": "REQUEST_VALIDATION", "message": "Invalid JSON payload."})
+            return Response(stream_with_context(error_stream_payload()), mimetype='text/event-stream', status=400)
+
+        contract_type_input = data.get("contract_type", "General Contract")
+        client_clauses = data.get("client_clauses") # Expected: [{"clause_id": "c1", "text": "..."}, ...]
+        overall_contract_context_str = data.get("overall_contract_context", "")
+
+        if not client_clauses or not isinstance(client_clauses, list) or not all("text" in c for c in client_clauses):
+            def error_stream_clauses(): yield stream_event({"event_type": "fatal_error", "step": "REQUEST_VALIDATION", "message": "Missing or invalid 'client_clauses' array in request."})
+            return Response(stream_with_context(error_stream_clauses()), mimetype='text/event-stream', status=400)
+
+    except Exception as e_req:
+        logger.error(f"Error processing request for contract validation stream: {e_req}", exc_info=True)
+        def error_stream_req_proc(): yield stream_event({"event_type": "fatal_error", "step": "REQUEST_PROCESSING", "message": f"Error processing request: {str(e_req)}."})
+        return Response(stream_with_context(error_stream_req_proc()), mimetype='text/event-stream', status=400)
+
+    # --- Generator function for SSE ---
+    def generate_contract_validation_stream():
+        try:
+            yield stream_event({"event_type": "system_log", "step_code": "CONTRACT_STREAM_START", "message": f"Contract validation initiated for {contract_type_input}..."})
+            time.sleep(0.05)
+
+            # Step 1: Load Relevant Shari'ah Context (SS Vector Store)
+            # This context will be used by SCVA and AISGA for all clauses.
+            yield stream_event({"event_type": "progress", "step_code": "SS_CTX_LOAD_START", "message": f"🔍 Loading Shari'ah Standards context for {contract_type_input}..."})
+            ss_context_for_clauses = []
+            if asave_context.get("ss_vector_store"):
+                try:
+                    # Create a combined query from contract type and clause summaries
+                    query_text_for_ss = contract_type_input + " " + overall_contract_context_str + " " + " ".join([c["text"][:100] for c in client_clauses])
+                    retriever = asave_context["ss_vector_store"].as_retriever(search_kwargs={"k": 7}) # Get more context for overall
+                    relevant_ss_docs = retriever.get_relevant_documents(query_text_for_ss)
+                    ss_context_for_clauses = [doc.page_content for doc in relevant_ss_docs]
+                    yield stream_event({"event_type": "progress", "step_code": "SS_CTX_LOAD_DONE", "message": f"Retrieved {len(ss_context_for_clauses)} relevant SS context snippets.", "payload": {"count": len(ss_context_for_clauses)}})
+                except Exception as e_ss_ctx:
+                    logger.error(f"Stream: Error retrieving SS context for contract: {e_ss_ctx}")
+                    yield stream_event({"event_type": "warning", "step_code": "SS_CTX_LOAD_ERROR", "message": f"SS context retrieval failed: {str(e_ss_ctx)}"})
+            else:
+                yield stream_event({"event_type": "warning", "step_code": "SS_CTX_LOAD_SKIP", "message": "SS Vector Store not available for context."})
+            time.sleep(0.05)
+
+            # Process each client clause
+            for clause_item in client_clauses:
+                clause_id = clause_item.get("clause_id", f"clause_{time.time_ns()}") # Generate an ID if not provided
+                clause_text = clause_item.get("text", "")
+                if not clause_text.strip():
+                    yield stream_event({"event_type": "clause_skipped", "payload": {"clause_id": clause_id, "original_text": clause_text, "reason": "Empty clause text."}})
+                    continue
+
+                yield stream_event({"event_type": "clause_processing_start", "payload": {"clause_id": clause_id, "original_text": clause_text, "message": f"Analyzing clause: '{clause_text[:50]}...'"}})
+                
+                clause_validation_report = None
+                clause_ai_suggestions = [] # To hold suggestions from multiple AISGA variants
+
+                # --- SCVA Validation for the client's clause ---
+                scva_task_desc = f"SCVA_for_client_clause_{clause_id}"
+                scva_result_wrapper = process_agent_task(
+                    asave_context["scva_iscca"], "validate_shariah_compliance", scva_task_desc,
+                    proposed_suggestion_object={"proposed_text": clause_text, "shariah_notes": f"Client proposed clause for {contract_type_input}."}, # Minimal object for SCVA
+                    shariah_rules_explicit_path=asave_context["shariah_rules_explicit_path"],
+                    ss_vector_store=asave_context["ss_vector_store"], # SCVA might use its own SS search
+                    mined_shariah_rules_path=asave_context["mined_shariah_rules_path"] if os.path.exists(asave_context["mined_shariah_rules_path"]) else None
+                )
+                if scva_result_wrapper["status"] == "success":
+                    clause_validation_report = scva_result_wrapper["result"]
+                    yield stream_event({"event_type": "clause_validation_result", "payload": {"clause_id": clause_id, "original_text": clause_text, "scva_report": clause_validation_report }})
+                else:
+                    yield stream_event({"event_type": "error", "step_code": f"SCVA_FAIL_{clause_id}", "message": f"SCVA validation failed for clause {clause_id}: {scva_result_wrapper['error']}", "payload": {"clause_id": clause_id}})
+                time.sleep(0.05)
+
+                # --- AISGA Suggestions (if non-compliant or for enhancement) ---
+                # Decide if suggestions are needed based on clause_validation_report
+                needs_suggestion = True # Default to true, or base on SCVA status
+                if clause_validation_report and clause_validation_report.get("overall_status", "").lower().startswith("compliant"):
+                    # needs_suggestion = False # Or still get suggestions for enhancement
+                    yield stream_event({"event_type": "system_log", "step_code": f"AISGA_SUGGEST_ENHANCEMENT_{clause_id}", "message": f"Clause '{clause_text[:30]}...' is initially compliant. AISGA will attempt enhancement suggestions."})
+                elif clause_validation_report:
+                    yield stream_event({"event_type": "system_log", "step_code": f"AISGA_SUGGEST_CORRECTION_{clause_id}", "message": f"Clause '{clause_text[:30]}...' needs correction/alternatives. Validation: {clause_validation_report.get('overall_status')}"})
+
+
+                if needs_suggestion:
+                    aisga_futures = {}
+                    for variant_name, aisga_instance in asave_context["aisga_variants"].items():
+                        if aisga_instance:
+                            yield stream_event({"event_type": "progress", "step_code": f"AISGA_START_{variant_name.upper()}_{clause_id}", "agent_name": variant_name, "message": f"AISGA Variant '{variant_name}' drafting for clause {clause_id}..."})
+                            # Tailor identified_ambiguity based on SCVA report
+                            ambiguity_for_aisga = f"Client proposed clause for a {contract_type_input}. Initial Shari'ah validation status: {clause_validation_report.get('overall_status', 'N/A') if clause_validation_report else 'Not validated yet'}. Reason: {clause_validation_report.get('summary_explanation', 'N/A') if clause_validation_report else 'N/A'}. Please provide compliant alternatives or enhancements."
+                            
+                            future = executor.submit(process_agent_task, aisga_instance, "generate_clarification",
+                                                     task_description=f"AISGA_{variant_name}_for_clause_{clause_id}",
+                                                     original_text=clause_text, identified_ambiguity=ambiguity_for_aisga,
+                                                     fas_context_strings=[], # No direct FAS standard text here, focus on client clause
+                                                     ss_context_strings=ss_context_for_clauses, # Use pre-fetched SS context
+                                                     variant_name_override=variant_name)
+                            aisga_futures[future] = {"type": "AISGA", "name": variant_name, "clause_id": clause_id}
+                    
+                    for future in as_completed(aisga_futures):
+                        agent_info = aisga_futures[future]
+                        aisga_result_wrapper = future.result()
+                        if aisga_result_wrapper["status"] == "success":
+                            ai_suggestion_payload = aisga_result_wrapper["result"]
+                            
+                            # Validate this AI-generated suggestion
+                            yield stream_event({"event_type": "progress", "step_code": f"AISGA_SUGG_VALIDATION_START_{agent_info['name']}_{clause_id}", "message": f"Validating AISGA ({agent_info['name']}) suggestion for clause {clause_id}..."})
+                            scva_aisugg_task_desc = f"SCVA_for_AISuggestion_{agent_info['name']}_{clause_id}"
+                            scva_aisugg_result_wrapper = process_agent_task(
+                                asave_context["scva_iscca"], "validate_shariah_compliance", scva_aisugg_task_desc,
+                                proposed_suggestion_object=ai_suggestion_payload, # The AI's suggestion
+                                shariah_rules_explicit_path=asave_context["shariah_rules_explicit_path"],
+                                ss_vector_store=asave_context["ss_vector_store"],
+                                mined_shariah_rules_path=asave_context["mined_shariah_rules_path"] if os.path.exists(asave_context["mined_shariah_rules_path"]) else None
+                            )
+                            
+                            ai_suggestion_scva_report = scva_aisugg_result_wrapper["result"] if scva_aisugg_result_wrapper["status"] == "success" else None
+                            
+                            # For this contract helper, ISCCA on the AI's suggestion might be less critical than SCVA
+                            # but can be added if desired. For now, focusing on SCVA of AI's suggestion.
+
+                            packaged_ai_suggestion = {
+                                "clause_id": clause_id,
+                                "source_agent_type": agent_info["type"],
+                                "source_agent_name": agent_info["name"],
+                                "suggestion_details": ai_suggestion_payload, # From AISGA (original, proposed, reasoning, etc.)
+                                "scva_report_on_ai_suggestion": ai_suggestion_scva_report,
+                                "validation_summary_score": f"AI Sugg. SCVA: {ai_suggestion_scva_report.get('overall_status', 'N/A') if ai_suggestion_scva_report else 'Validation Error'}"
+                            }
+                            clause_ai_suggestions.append(packaged_ai_suggestion) # Store for later summary if needed
+                            yield stream_event({"event_type": "clause_ai_suggestion_generated", "payload": packaged_ai_suggestion})
+                        else:
+                            yield stream_event({"event_type": "error", "step_code": f"AISGA_FAIL_{agent_info['name']}_{clause_id}", "message": f"AISGA variant '{agent_info['name']}' failed for clause {clause_id}: {aisga_result_wrapper['error']}", "payload": {"clause_id": clause_id}})
+                        time.sleep(0.05)
+                
+                yield stream_event({"event_type": "clause_processing_end", "payload": {"clause_id": clause_id, "message": f"Finished analysis for clause: '{clause_text[:50]}...'"}})
+                time.sleep(0.1) # Small delay between processing clauses
+
+            yield stream_event({"event_type": "system_log", "step_code": "CONTRACT_STREAM_END", "message": "Contract terms validation stream finished."})
+
+        except Exception as e_stream_main:
+            logger.error(f"Critical error within contract validation stream generator: {e_stream_main}", exc_info=True)
+            yield stream_event({"event_type": "fatal_error", "step_code": "STREAM_GENERATOR_ERROR", "message": f"Stream failed: {str(e_stream_main)}"})
+
+    return Response(stream_with_context(generate_contract_validation_stream()), mimetype='text/event-stream')
+
+
 if __name__ == '__main__':
     if not os.getenv("GOOGLE_API_KEY"):
         logger.critical("CRITICAL: GOOGLE_API_KEY environment variable not set. API will not function correctly.")
