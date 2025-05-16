@@ -12,7 +12,7 @@ class SuggestionAgent(BaseAgent):
     Generates clarifications for ambiguities or proposes enhancements/new clauses for gaps.
     Modified for API to accept string contexts and provide prompt details.
     """
-    def __init__(self, model_name: str = "gemini-1.5-pro-latest", temperature: float = 0.5):
+    def __init__(self, model_name: str = "gemini-2.5-pro-preview-05-06", temperature: float = 0.5):
         super().__init__(model_name=model_name, temperature=temperature,
                          system_message="You are an expert in drafting financial standards, specializing in AAOIFI FAS and Shari'ah compliance. Your suggestions must be precise, clear, and justifiable.")
 

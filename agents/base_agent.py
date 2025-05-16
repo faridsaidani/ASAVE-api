@@ -12,7 +12,7 @@ class BaseAgent:
     """
     Base class for all AI agents, providing common LLM initialization and chain invocation.
     """
-    def __init__(self, model_name: str = "gemini-1.5-flash-latest", temperature: float = 0.3, system_message: str = None):
+    def __init__(self, model_name: str = "gemini-2.0-flash", temperature: float = 0.3, system_message: str = None):
         """
         Initializes the agent with a Google Gemini LLM.
 
@@ -26,7 +26,7 @@ class BaseAgent:
             logger.error("GOOGLE_API_KEY not set during BaseAgent init.")
             raise ValueError("GOOGLE_API_KEY environment variable not set.")
         
-        self.llm = ChatGoogleGenerativeAI(model=model_name, temperature=temperature, convert_system_message_to_human=True if system_message else False)
+        self.llm = ChatGoogleGenerativeAI(model=model_name, temperature=temperature)
         self.model_name = model_name
         self.system_message = system_message
         logger.info(f"BaseAgent initialized with LLM: {model_name}, Temperature: {temperature}")

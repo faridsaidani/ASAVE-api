@@ -15,7 +15,7 @@ class ValidationAgent(BaseAgent):
     SCVA & ISCCA: Shari'ah Compliance Validation Agent & Inter-Standard Consistency Check Agent.
     Validates suggestions for Shari'ah compliance and (conceptually) inter-standard consistency.
     """
-    def __init__(self, model_name: str = "gemini-1.5-pro-latest", temperature: float = 0.1):
+    def __init__(self, model_name: str = "gemini-2.5-pro-preview-05-06", temperature: float = 0.1):
         super().__init__(model_name=model_name, temperature=temperature,
                          system_message="You are an expert Shari'ah scholar and AAOIFI standards auditor. Your task is to critically evaluate text for compliance and consistency based on provided rules and context.")
 

@@ -89,3 +89,7 @@ poetry.lock
 *.tmp
 *.swp
 *.swo
+
+db_store/
+*.bin
+*.pickle

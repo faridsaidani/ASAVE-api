@@ -15,7 +15,7 @@ class ShariahRuleMinerAgent(BaseAgent):
     SRMA: Shari'ah Rule Miner Agent.
     Extracts and structures Shari'ah rules from AAOIFI Shari'ah Standards (SS) documents.
     """
-    def __init__(self, model_name: str = "gemini-1.5-pro-latest", temperature: float = 0.3):
+    def __init__(self, model_name: str = "gemini-2.5-pro-preview-05-06", temperature: float = 0.3):
         super().__init__(model_name=model_name, temperature=temperature,
                          system_message="You are an expert in Islamic jurisprudence and AAOIFI Shari'ah Standards. Your task is to meticulously extract and structure Shari'ah rules from provided texts.")
 
@@ -71,8 +71,8 @@ class ShariahRuleMinerAgent(BaseAgent):
         3.  "principle_keywords": A list of 3-5 relevant Shari'ah keywords or concepts (e.g., ["Riba", "Gharar", "Maysir", "Contract", "Permissibility"]).
         4.  "description": A concise, clear, and complete statement of the rule based on the provided rule text. Rephrase for clarity if necessary, but maintain original meaning.
         5.  "validation_query_template": A question template that can be used to validate if a financial product or transaction complies with this rule.
-            This template should include placeholders like '{{suggestion_text}}' or '{{product_details}}' and '{{specific_aspect}}'.
-            Example: "Does the proposed transaction ('{{suggestion_text}}') regarding '{{specific_aspect}}' involve any element of Riba Al-Fadl as per this rule? Analyze based on the principle of equal countervalues in exchanges of ribawi items."
+            This template should include placeholders like '{{{{suggestion_text}}}}' or '{{{{product_details}}}}' and '{{{{specific_aspect}}}}'.
+            Example: "Does the proposed transaction ('{{{{suggestion_text}}}}') regarding '{{{{specific_aspect}}}}' involve any element of Riba Al-Fadl as per this rule? Analyze based on the principle of equal countervalues in exchanges of ribawi items."
 
         Ensure your output is a single, valid JSON object with only the keys: "standard_ref", "principle_keywords", "description", "validation_query_template".
 
@@ -103,6 +103,7 @@ class ShariahRuleMinerAgent(BaseAgent):
             logger.error(f"Error in _format_rule_to_json_structure: {e}. Rule text: {rule_text[:50]}", exc_info=True)
             return None
 
+
     def mine_rules_from_document_list(self,
                                       ss_documents_with_metadata: List[Dict[str, Any]],
                                       doc_processor_instance, # Instance of DocumentProcessor
@@ -121,22 +122,28 @@ class ShariahRuleMinerAgent(BaseAgent):
             standard_rules = []
             
             logger.info(f"Processing Shari'ah Standard for SRMA: {standard_name_full} ({pdf_path})")
+            print(f"[SRMA] Processing Shari'ah Standard: {standard_name_full} ({pdf_path})")
             
             try:
+                print(f"[SRMA] Loading PDF: {pdf_path}")
                 docs = doc_processor_instance.load_pdf(pdf_path)
-                # Larger chunks might be better for rule context, but balance with LLM token limits
+                print(f"[SRMA] Chunking document: {pdf_path}")
                 chunks = doc_processor_instance.chunk_text(docs, chunk_size=2000, chunk_overlap=400)
+                print(f"[SRMA] Document chunked into {len(chunks)} chunks.")
             except Exception as e:
                 logger.error(f"Error loading/chunking {pdf_path} for SRMA: {e}", exc_info=True)
+                print(f"[SRMA] ERROR: Failed to load/chunk {pdf_path}: {e}")
                 continue
 
             for i, chunk in enumerate(chunks):
                 logger.debug(f"  SRMA Processing chunk {i+1}/{len(chunks)} for {standard_short_code}...")
+                print(f"[SRMA] Extracting potential rules from chunk {i+1}/{len(chunks)}...")
                 potential_rule_texts = self._extract_potential_rules_from_chunk(chunk.page_content, standard_name_full)
                 
                 for rule_text in potential_rule_texts:
                     if len(rule_text.strip()) < 20 : continue # Skip very short, likely irrelevant matches
                     logger.debug(f"    SRMA Formatting potential rule: '{rule_text[:70]}...'")
+                    print(f"[SRMA] Formatting rule: {rule_text[:60]}...")
                     formatted_rule = self._format_rule_to_json_structure(
                         rule_text,
                         standard_name_full,
@@ -145,6 +152,7 @@ class ShariahRuleMinerAgent(BaseAgent):
                     )
                     if formatted_rule:
                         logger.info(f"      + SRMA Mined Rule ID: {formatted_rule['rule_id']} from {standard_short_code}")
+                        print(f"[SRMA] + Mined Rule ID: {formatted_rule['rule_id']} from {standard_short_code}")
                         standard_rules.append(formatted_rule)
                         all_mined_rules.append(formatted_rule)
             
@@ -154,16 +162,19 @@ class ShariahRuleMinerAgent(BaseAgent):
                     with open(output_path_standard, 'w', encoding='utf-8') as f:
                         json.dump(standard_rules, f, indent=2, ensure_ascii=False)
                     logger.info(f"  Saved {len(standard_rules)} rules for {standard_short_code} to {output_path_standard}")
+                    print(f"[SRMA] Saved {len(standard_rules)} rules for {standard_short_code} to {output_path_standard}")
                 except IOError as e:
                     logger.error(f"  Failed to save rules for {standard_short_code} to {output_path_standard}: {e}")
+                    print(f"[SRMA] ERROR: Failed to save rules for {standard_short_code}: {e}")
 
         output_path_combined = os.path.join(base_output_dir, "shariah_rules_mined_combined.json")
         try:
             with open(output_path_combined, 'w', encoding='utf-8') as f:
                 json.dump(all_mined_rules, f, indent=2, ensure_ascii=False)
             logger.info(f"Saved a total of {len(all_mined_rules)} SRMA rules to {output_path_combined}")
+            print(f"[SRMA] Saved a total of {len(all_mined_rules)} rules to {output_path_combined}")
         except IOError as e:
             logger.error(f"Failed to save combined SRMA rules to {output_path_combined}: {e}")
+            print(f"[SRMA] ERROR: Failed to save combined rules: {e}")
             return "" # Return empty if save fails
-
         return output_path_combined

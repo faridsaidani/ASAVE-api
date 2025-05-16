@@ -12,7 +12,7 @@ class ExtractionAgent(BaseAgent):
     KEEA: Knowledge Extraction & Enhancement Agent.
     Extracts definitions, key clauses, and identifies ambiguities from text.
     """
-    def __init__(self, model_name: str = "gemini-1.5-flash-latest", temperature: float = 0.2):
+    def __init__(self, model_name: str = "gemini-2.0-flash", temperature: float = 0.2):
         super().__init__(model_name=model_name, temperature=temperature, system_message="You are an expert financial analyst specializing in AAOIFI standards. Your task is to meticulously extract information from provided text segments.")
 
     def extract_definitions(self, text_chunk: str) -> List[Dict[str, str]]:
