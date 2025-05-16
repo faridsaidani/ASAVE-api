@@ -14,11 +14,15 @@ ASAVE API provides endpoints to leverage AI for reviewing, suggesting, and valid
     * [POST /initialize](#post-initialize)
     * [POST /analyze_chunk](#post-analyze_chunk)
     * [POST /mine_shariah_rules](#post-mine_shariah_rules)
+    * [POST /extract_text_from_pdf](#post-extract_text_from_pdf)
+    * [POST /extract_text_from_pdf_file_marker](#post-extract_text_from_pdf_file_marker)
 7. [Example API Calls (Windows - PowerShell/CMD and Postman)](#7-example-api-calls-windows---powershellcmd-and-postman)
     * [Initializing the System](#initializing-the-system)
     * [Analyzing a Text Chunk](#analyzing-a-text-chunk)
     * [Mining Shari'ah Rules](#mining-shariah-rules)
     * [Checking System Status](#checking-system-status)
+    * [Extracting Text from a PDF (AI Markdown Reformatting)](#extracting-text-from-a-pdf-ai-markdown-reformatting)
+    * [Extracting Text and Images from a PDF (Marker Pipeline)](#extracting-text-and-images-from-a-pdf-marker-pipeline)
 8. [Project Structure](#8-project-structure)
 9. [Important Considerations](#9-important-considerations)
 
@@ -141,6 +145,26 @@ python api_server.py
   _Analyzes a specific text chunk_
 - **POST /mine_shariah_rules**  
   _Triggers SRMA_
+- **POST /extract_text_from_pdf**  
+  _Extracts text from a PDF file, with optional AI reformatting (Markdown output per page)._
+
+  **Request Body:**
+    - `pdf_file`: The PDF file to extract text from.
+    - `ai_reformat`: (Optional) Boolean flag to indicate if AI reformatting is desired.
+
+  **Response:**
+    - `status`: Operation status.
+    - `extracted_text`: The extracted text or reformatted Markdown content.
+
+- **POST /extract_text_from_pdf_file_marker**  
+  _Extracts text and images from a PDF file using the marker pipeline._
+
+  **Request Body:**
+    - `pdf_file`: The PDF file to process.
+
+  **Response:**
+    - `status`: Operation status.
+    - `extracted_content`: The extracted text and images.
 
 See detailed request/response structures in the full documentation.
 
@@ -230,6 +254,28 @@ Invoke-RestMethod -Uri http://localhost:5001/status
 
 ---
 
+### 🟢 Extracting Text from a PDF (AI Markdown Reformatting)
+
+**curl (CMD):**
+```cmd
+curl -X POST ^
+  -F "pdf_file=@C:/asave_test_files/dummy.pdf" ^
+  http://localhost:5001/extract_text_from_pdf
+```
+
+---
+
+### 🟢 Extracting Text and Images from a PDF (Marker Pipeline)
+
+**curl (CMD):**
+```cmd
+curl -X POST ^
+  -F "pdf_file=@C:/asave_test_files/dummy.pdf" ^
+  http://localhost:5001/extract_text_from_pdf_file_marker
+```
+
+---
+
 ## 8️⃣ Project Structure
 
 ```
@@ -246,7 +292,7 @@ asave_api_project/
 ├── temp_api_uploads/
 ├── db_store_api/
 ├── output_srma_api/
-└── requirements.txt
+├── requirements.txt
 ```
 
 ---
