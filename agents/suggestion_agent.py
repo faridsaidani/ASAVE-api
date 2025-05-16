@@ -12,9 +12,9 @@ class SuggestionAgent(BaseAgent):
     Generates clarifications for ambiguities or proposes enhancements/new clauses for gaps.
     Modified for API to accept string contexts and provide prompt details.
     """
-    def __init__(self, model_name: str = "gemini-2.5-pro-preview-05-06", temperature: float = 0.5):
+    def __init__(self, model_name: str = "gemini-2.5-pro-preview-05-06", temperature: float = 0.5, system_message: str = None):
         super().__init__(model_name=model_name, temperature=temperature,
-                         system_message="You are an expert in drafting financial standards, specializing in AAOIFI FAS and Shari'ah compliance. Your suggestions must be precise, clear, and justifiable.")
+                         system_message= system_message or "You are an expert financial analyst specializing in AAOIFI standards. Your task is to generate clarifications for ambiguities or propose enhancements for gaps in the provided text segments.")
 
     def _get_context_str(self, context_items: List[str], context_type: str = "Context") -> str:
         """Helper to format context strings."""
