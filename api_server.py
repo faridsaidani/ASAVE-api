@@ -184,6 +184,7 @@ def initialize_asave():
             "use_llm": True,
             "gemini_api_key": os.getenv("GEMINI_API_KEY"),
             "disable_image_extraction": True,
+            "paginate_output" : True,
         }
         config_parser = ConfigParser(raw_config)
         converter = PdfConverter(
