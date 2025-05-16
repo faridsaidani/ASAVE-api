@@ -1,0 +1,203 @@
+{
+	"info": {
+		"_postman_id": "YOUR_UNIQUE_COLLECTION_ID",
+		"name": "ASAVE API",
+		"description": "Postman Collection for testing the ASAVE (AAOIFI Standard Augmentation & Validation Engine) API.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "System Status",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/status",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"status"
+					]
+				},
+				"description": "Get the current status of the ASAVE API system and its components."
+			},
+			"response": []
+		},
+		{
+			"name": "Initialize System",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "fas_files",
+							"type": "file",
+							"src": "/path/to/your/dummy_fas1.pdf",
+							"description": "FAS PDF file 1. **UPDATE THE 'src' PATH TO YOUR ACTUAL FILE.**"
+						},
+						{
+							"key": "fas_files",
+							"type": "file",
+							"src": "/path/to/your/dummy_fas2.pdf",
+							"description": "FAS PDF file 2 (optional). **UPDATE THE 'src' PATH TO YOUR ACTUAL FILE.**"
+						},
+						{
+							"key": "ss_files",
+							"type": "file",
+							"src": "/path/to/your/dummy_ss1.pdf",
+							"description": "SS PDF file 1. **UPDATE THE 'src' PATH TO YOUR ACTUAL FILE.**"
+						},
+						{
+							"key": "shariah_rules_explicit_file",
+							"type": "file",
+							"src": "/path/to/your/shariah_rules_explicit.json",
+							"description": "(Optional) Explicit Shari'ah rules. **UPDATE THE 'src' PATH TO YOUR ACTUAL FILE.**"
+						},
+						{
+							"key": "persist_db_path_base",
+							"value": "./postman_db_store",
+							"type": "text",
+							"description": "(Optional) Path for persistent vector stores."
+						}
+					]
+				},
+				"url": {
+					"raw": "{{baseUrl}}/initialize",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"initialize"
+					]
+				},
+				"description": "Initializes the ASAVE system by processing PDF documents and setting up agents. **Ensure GOOGLE_API_KEY is set on the server.**\n\n**IMPORTANT:** Update the `src` paths for file parameters to point to actual files on your local system where Postman can access them."
+			},
+			"response": []
+		},
+		{
+			"name": "Analyze Text Chunk",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"target_text_chunk\": \"An entity shall recognise revenue when (or as) the entity satisfies a performance obligation by transferring a promised good or service (i.e., an asset) to a customer.\",\n    \"fas_context_chunks\": [\n        \"Revenue is income arising in the course of an entity’s ordinary activities.\",\n        \"A performance obligation is a promise in a contract with a customer to transfer to the customer either a good or service (or a bundle of goods or services) that is distinct.\"\n    ],\n    \"ss_context_chunks\": [\n        \"Contracts of exchange (Mu’awadat) must be free from major uncertainty (Gharar) and gambling (Maysir).\",\n        \"The subject matter of a sale must be in existence, owned by the seller, and capable of delivery.\"\n    ],\n    \"fas_name_for_display\": \"FAS on Revenue Recognition (Postman Test)\",\n    \"identified_ambiguity\": \"The term asset transfer might need clarification on constructive transfer or control for Shariah compliance in specific Islamic finance contracts.\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/analyze_chunk",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"analyze_chunk"
+					]
+				},
+				"description": "Analyzes a specific text chunk with provided context. Requires the system to be initialized first."
+			},
+			"response": []
+		},
+		{
+			"name": "Mine Shari'ah Rules (SRMA)",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "ss_files_for_srma",
+							"type": "file",
+							"src": "/path/to/your/dummy_ss_for_srma1.pdf",
+							"description": "First SS PDF for SRMA. **UPDATE THE 'src' PATH TO YOUR ACTUAL FILE.**"
+						},
+						{
+							"key": "ss_files_for_srma_0_fullname",
+							"value": "Dummy Shariah Standard - Ijarah (SRMA Test)",
+							"type": "text"
+						},
+						{
+							"key": "ss_files_for_srma_0_shortcode",
+							"value": "DSSRM-IJA",
+							"type": "text"
+						},
+						{
+							"key": "ss_files_for_srma",
+							"type": "file",
+							"src": "/path/to/your/dummy_ss_for_srma2.pdf",
+							"description": "Second SS PDF for SRMA (optional). **UPDATE THE 'src' PATH TO YOUR ACTUAL FILE.**"
+						},
+						{
+							"key": "ss_files_for_srma_1_fullname",
+							"value": "Dummy Shariah Standard - Murabaha (SRMA Test)",
+							"type": "text"
+						},
+						{
+							"key": "ss_files_for_srma_1_shortcode",
+							"value": "DSSRM-MUR",
+							"type": "text"
+						},
+						{
+							"key": "output_directory",
+							"value": "./srma_postman_output",
+							"type": "text",
+							"description": "(Optional) Output directory for SRMA results."
+						}
+					]
+				},
+				"url": {
+					"raw": "{{baseUrl}}/mine_shariah_rules",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"mine_shariah_rules"
+					]
+				},
+				"description": "Triggers the Shari'ah Rule Miner Agent (SRMA) to process SS PDF files. Requires system initialization.\n\n**IMPORTANT:** Update the `src` paths for file parameters to point to actual files on your local system where Postman can access them."
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:5001",
+			"type": "string",
+			"description": "Base URL for the ASAVE API server."
+		}
+	]
+}
