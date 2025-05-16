@@ -9,3 +9,6 @@ chromadb>=0.4.0
 tiktoken # Often a dependency for text splitters in Langchain
 python-dotenv # If you use .env files for API keys locally
 reportlab # (Only if you run the test/dummy PDF generation code in some modules, not for API core)
+torch==2.7.0+cu126
+torchaudio==2.7.0+cu126
+torchvision==0.22.0+cu126

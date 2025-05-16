@@ -16,6 +16,13 @@ from agents.validation_agent import ValidationAgent
 from agents.shariah_rule_miner_agent import ShariahRuleMinerAgent
 from agents.text_reformatter_agent import TextReformatterAgent # <-- NEW IMPORT
 
+from marker.converters.pdf import PdfConverter
+from marker.models import create_model_dict
+from marker.output import text_from_rendered
+from marker.config.parser import ConfigParser
+import os
+import json
+
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'temp_api_uploads'
@@ -41,7 +48,9 @@ asave_context = {
     "srma": None,
     "shariah_rules_explicit_path": "shariah_rules_explicit.json",
     "mined_shariah_rules_path": "output_srma_api/shariah_rules_mined_combined.json",
-    "initialized": False
+    "initialized": False,
+    "text_reformatter_agent": None,
+    "text_reformatter_marker" : None,
 }
 
 def allowed_file(filename):
@@ -169,6 +178,23 @@ def initialize_asave():
         
         logger.info("Initializing Text Reformatter Agent...")
         asave_context["text_reformatter_agent"] = TextReformatterAgent()
+
+        raw_config = {
+            "output_format": "markdown",
+            "use_llm": True,
+            "gemini_api_key": os.getenv("GEMINI_API_KEY"),
+            "disable_image_extraction": True,
+        }
+        config_parser = ConfigParser(raw_config)
+        converter = PdfConverter(
+            config=config_parser.generate_config_dict(),
+            artifact_dict=create_model_dict(),
+            processor_list=config_parser.get_processors(),
+            renderer=config_parser.get_renderer(),
+            llm_service=config_parser.get_llm_service(),
+        )
+        asave_context["text_reformatter_marker"] = converter
+        
         return jsonify({
             "status": "success", "message": "ASAVE system initialized with multiple agent variants.",
             "fas_vector_store_status": "Created/Loaded" if asave_context["fas_vector_store"] else "Not Created",
@@ -311,6 +337,8 @@ def get_status_api():
             "num_specialized_agents": len(asave_context["specialized_agents"]),
             "scva_iscca": bool(asave_context["scva_iscca"]),
             "srma": bool(asave_context["srma"]),
+            "text_reformatter_agent": bool(asave_context["text_reformatter_agent"]),
+            "text_reformatter_marker": bool(asave_context["text_reformatter_marker"])
         }
     })
 
@@ -601,6 +629,46 @@ def extract_text_from_pdf_api():
             return jsonify({"status": "error", "message": f"Failed to process PDF: {str(e)}"}), 500
     else:
         return jsonify({"status": "error", "message": "Invalid file type, PDF required."}), 400
+
+
+@app.route('/extract_text_from_pdf_file_marker', methods=['POST'])
+def extract_text_from_pdf_file_api():
+    """
+    Accepts a PDF file upload, extracts text and images using the marker pipeline, and returns the result as JSON.
+    """
+    logger.info("Received /extract_text_from_pdf_file request.")
+    if 'pdf_file' not in request.files:
+        return jsonify({"status": "error", "message": "No 'pdf_file' part in the request."}), 400
+    file = request.files['pdf_file']
+    if file.filename == '':
+        return jsonify({"status": "error", "message": "No selected file."}), 400
+    if not allowed_file(file.filename):
+        return jsonify({"status": "error", "message": "Invalid file type, PDF required."}), 400
+
+    try:
+        filename = secure_filename(file.filename)
+        temp_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(temp_path)
+        converter = asave_context.get("text_reformatter_marker")
+        rendered = converter(temp_path)
+        text, _, _ = text_from_rendered(rendered)
+
+        # Clean up temp file
+        try:
+            os.remove(temp_path)
+        except Exception as cleanup_err:
+            logger.warning(f"Could not remove temp file {temp_path}: {cleanup_err}")
+
+        return jsonify({
+            "status": "success",
+            "message": "Extracted text and images from uploaded PDF.",
+            "filename": filename,
+            "extracted_text": text,
+        }), 200
+
+    except Exception as e:
+        logger.error(f"Error extracting text/images from PDF: {e}", exc_info=True)
+        return jsonify({"status": "error", "message": f"Failed to process PDF: {str(e)}"}), 500
 
 if __name__ == '__main__':
     if not os.getenv("GOOGLE_API_KEY"):
