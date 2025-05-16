@@ -183,7 +183,7 @@ def initialize_asave():
             "output_format": "markdown",
             "use_llm": True,
             "gemini_api_key": os.getenv("GEMINI_API_KEY"),
-            "disable_image_extraction": True,
+            "output_format": "markdown",
             "paginate_output" : True,
         }
         config_parser = ConfigParser(raw_config)
@@ -652,7 +652,20 @@ def extract_text_from_pdf_file_api():
         file.save(temp_path)
         converter = asave_context.get("text_reformatter_marker")
         rendered = converter(temp_path)
-        text, _, _ = text_from_rendered(rendered)
+        text, _, images = text_from_rendered(rendered)
+
+        image_info = []
+        if images:
+            for path, image in images.items():
+                try:
+                    os.makedirs('./output', exist_ok=True)
+                    image_save_path = os.path.join('./output', path)
+                    image.save(image_save_path, image.format)
+                    image_info.append({"image_path": path, "saved_to": image_save_path, "format": image.format})
+                except Exception as e:
+                    image_info.append({"image_path": path, "error": str(e)})
+        else:
+            image_info = "No images found in the PDF."
 
         # Clean up temp file
         try:
@@ -665,6 +678,7 @@ def extract_text_from_pdf_file_api():
             "message": "Extracted text and images from uploaded PDF.",
             "filename": filename,
             "extracted_text": text,
+            "images": image_info
         }), 200
 
     except Exception as e:
