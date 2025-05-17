@@ -114,9 +114,17 @@ def initialize_asave():
         current_session_persist_path = None
         effective_session_id = None
 
+        print(f"Session name to save: {session_name_to_save}")
+        print(f"Session ID to load: {session_id_to_load}")
+        print(f"Library FAS filenames: {library_fas_filenames_json}")
+        print(f"Library SS filenames: {library_ss_filenames_json}")
+        print(f"Uploaded FAS files: {[f.filename for f in uploaded_fas_files]}")
+        print(f"Uploaded SS files: {[f.filename for f in uploaded_ss_files]}")
+        print(f"Uploaded rules file: {uploaded_rules_file.filename if uploaded_rules_file else 'None'}")
         if session_id_to_load:
             effective_session_id = secure_filename(session_id_to_load) # Sanitize
             current_session_persist_path = os.path.join(SESSIONS_DB_PATH, effective_session_id)
+            print(f"Attempting to load existing session: {effective_session_id} from {current_session_persist_path}")
             logger.info(f"Attempting to load existing session: {effective_session_id} from {current_session_persist_path}")
             if not os.path.isdir(current_session_persist_path):
                 return jsonify({"status": "error", "message": f"Session '{effective_session_id}' not found."}), 404
@@ -151,7 +159,7 @@ def initialize_asave():
         # (Same logic as before: use uploaded, or default, or create dummy)
         # Save it within the current_session_persist_path for session consistency
         session_rules_path = os.path.join(current_session_persist_path, "shariah_rules_explicit.json")
-        if uploaded_rules_file and allowed_file(uploaded_rules_file.filename, {'.json'}):
+        if uploaded_rules_file and allowed_file(uploaded_rules_file.filename):
             uploaded_rules_file.save(session_rules_path)
             asave_context["shariah_rules_explicit_path"] = session_rules_path
             logger.info(f"Saved uploaded explicit rules to session: {session_rules_path}")
@@ -253,17 +261,51 @@ def initialize_asave():
 
         # --- Initialize Agents (always do this after context might have changed) ---
         logger.info("Initializing/Re-initializing AI Agents for the current session...")
-        # (Agent initialization logic as before - AISGA variants, SCVA, Specialized)
-        # This ensures they use the latest vector stores if a session was loaded or stores rebuilt.
+        # Always initialize all agents for consistency, regardless of whether loading or creating a new session
+        
+        # Initialize ValidationAgent
         asave_context["scva_iscca"] = ValidationAgent()
+        logger.info("Initialized ValidationAgent (SCVA/ISCCA)")
+        
+        # Initialize ShariahRuleMinerAgent (SRMA) - Add this to ensure it's initialized
+        asave_context["srma"] = ShariahRuleMinerAgent(
+            model_name="gemini-1.5-pro-latest", temperature=0.3
+        )
+        logger.info("Initialized ShariahRuleMinerAgent (SRMA)")
+        
+        # Initialize SuggestionAgent variants (AISGA)
         asave_context["aisga_variants"]["pro_conservative_detailed"] = SuggestionAgent(
-            model_name="gemini-1.5-pro-latest", temperature=0.2, system_message="...")
+            model_name="gemini-1.5-pro-latest", temperature=0.2
+        )
         asave_context["aisga_variants"]["pro_conservative_detailed"].agent_type = "AISGA_ProConsDetailed"
+        
         asave_context["aisga_variants"]["flash_alternative_options"] = SuggestionAgent(
-            model_name="gemini-1.5-flash-latest", temperature=0.7, system_message="...")
+            model_name="gemini-1.5-flash-latest", temperature=0.7
+        )
         asave_context["aisga_variants"]["flash_alternative_options"].agent_type = "AISGA_FlashCreative"
+        logger.info(f"Initialized {len(asave_context['aisga_variants'])} SuggestionAgent variants (AISGA)")
+        
+        # Initialize specialized agents
         asave_context["specialized_agents"]["conciseness_agent"] = ConcisenessAgent()
-        # Marker and TextReformatter for PDF extraction are initialized on first use by their respective routes.
+        logger.info("Initialized specialized agents")
+        
+        # Initialize Marker and TextReformatter for PDF extraction
+        raw_config = {
+            "output_format": "markdown",
+            "use_llm": True,
+            "gemini_api_key": os.getenv("GEMINI_API_KEY"),
+            "output_format": "markdown",
+            "paginate_output" : True,
+        }
+        config_parser = ConfigParser(raw_config)
+        converter = PdfConverter(
+            config=config_parser.generate_config_dict(),
+            artifact_dict=create_model_dict(),
+            processor_list=config_parser.get_processors(),
+            renderer=config_parser.get_renderer(),
+            llm_service=config_parser.get_llm_service(),
+        )
+        asave_context["text_reformatter_marker"] = converter
 
         # Cleanup temporary upload directory if it was created for this session's uploads
         if os.path.exists(upload_temp_dir):
@@ -290,7 +332,6 @@ def initialize_asave():
         asave_context["initialized"] = False
         return jsonify({"status": "error", "message": f"General initialization error: {str(e)}"}), 500
 
-
 # --- New API Endpoint: List Saved Sessions ---
 @app.route('/list_sessions', methods=['GET'])
 def list_sessions_api():
@@ -316,6 +357,114 @@ def list_sessions_api():
     except Exception as e:
         logger.error(f"Error listing sessions: {e}", exc_info=True)
         return jsonify({"status": "error", "message": f"Failed to list sessions: {str(e)}"}), 500
+    
+
+@app.route('/analyze_chunk_enhanced', methods=['POST'])
+def analyze_chunk_enhanced_api():
+    # This is the NON-STREAMING version that returns all results at once.
+    # (Code from the previous response for this endpoint, which uses ThreadPoolExecutor)
+    global asave_context, executor
+    logger.info("Received /analyze_chunk_enhanced request (non-streaming).")
+    # ... (Full implementation as provided in the previous answer)
+    if not asave_context["initialized"]:
+        return jsonify({"status": "error", "message": "ASAVE system not initialized."}), 400
+    if not asave_context["scva_iscca"]:
+        return jsonify({"status": "error", "message": "Validation agent (SCVA/ISCCA) not initialized."}), 500
+
+    try:
+        data = request.get_json()
+        if not data: return jsonify({"status": "error", "message": "Invalid JSON payload."}), 400
+
+        target_text = data.get("target_text_chunk")
+        fas_context_strings = data.get("fas_context_chunks", [])
+        ss_context_strings = data.get("ss_context_chunks", [])
+        fas_name = data.get("fas_name_for_display", "Unnamed FAS") # This would be fas_doc_id in new flow
+        ambiguity_desc = data.get("identified_ambiguity", "User selected text for review/enhancement.")
+
+        if not target_text: return jsonify({"status": "error", "message": "Missing 'target_text_chunk'."}), 400
+
+        raw_suggestions_from_agents = []
+        agent_processing_log = []
+        future_to_agent = {}
+
+        # AISGA Variants
+        for variant_name, aisga_instance in asave_context["aisga_variants"].items():
+            if aisga_instance:
+                future = executor.submit(
+                    process_suggestion_task, aisga_instance, "generate_clarification",
+                    original_text=target_text, identified_ambiguity=ambiguity_desc,
+                    fas_context_strings=fas_context_strings, ss_context_strings=ss_context_strings,
+                    variant_name_override=variant_name
+                )
+                future_to_agent[future] = {"type": "AISGA", "name": variant_name}
+        # Specialized Agents
+        conciseness_agent = asave_context["specialized_agents"].get("conciseness_agent")
+        if conciseness_agent:
+            future = executor.submit(
+                process_suggestion_task, conciseness_agent, "make_concise",
+                text_to_make_concise=target_text, shariah_context_strings=ss_context_strings
+            )
+            future_to_agent[future] = {"type": "Specialized", "name": "ConcisenessAgent"}
+
+        for future in as_completed(future_to_agent):
+            agent_info = future_to_agent[future]
+            try:
+                result = future.result()
+                if isinstance(result, dict) and "error" not in result and result.get("proposed_text"):
+                    raw_suggestions_from_agents.append({
+                        "source_agent_type": agent_info["type"], "source_agent_name": agent_info["name"],
+                        "suggestion_payload": result
+                    })
+                    agent_processing_log.append({"agent_name": agent_info["name"], "type": agent_info["type"], "status": "success", "summary": result.get("proposed_text", "")[:50]+"..."})
+                else:
+                    agent_processing_log.append({"agent_name": agent_info["name"], "type": agent_info["type"], "status": "failed_or_empty", "details": result})
+            except Exception as exc:
+                agent_processing_log.append({"agent_name": agent_info["name"], "type": agent_info["type"], "status": "exception_in_future", "error": str(exc)})
+        
+        validated_suggestions_list = []
+        validation_futures = {}
+        for raw_sugg_item in raw_suggestions_from_agents:
+            suggestion_payload = raw_sugg_item["suggestion_payload"]
+            scva_future = executor.submit(
+                asave_context["scva_iscca"].validate_shariah_compliance_batched,
+                proposed_suggestion_object=suggestion_payload,
+                shariah_rules_explicit_path=asave_context["shariah_rules_explicit_path"],
+                ss_vector_store=asave_context["ss_vector_store"],
+                mined_shariah_rules_path=asave_context["mined_shariah_rules_path"] if os.path.exists(asave_context["mined_shariah_rules_path"]) else None
+            )
+            iscca_future = executor.submit(
+                asave_context["scva_iscca"].validate_inter_standard_consistency,
+                proposed_suggestion_object=suggestion_payload, fas_name=fas_name,
+                all_fas_vector_store=asave_context["all_fas_vector_store"]
+            )
+            validation_futures[raw_sugg_item] = (scva_future, iscca_future)
+
+        for raw_sugg_item, (scva_future, iscca_future) in validation_futures.items():
+            try:
+                scva_report = scva_future.result()
+                iscca_report = iscca_future.result()
+                validated_suggestions_list.append({
+                    "source_agent_type": raw_sugg_item["source_agent_type"],
+                    "source_agent_name": raw_sugg_item["source_agent_name"],
+                    "suggestion_details": raw_sugg_item["suggestion_payload"],
+                    "scva_report": scva_report, "iscca_report": iscca_report,
+                    "validation_summary_score": f"SCVA: {scva_report.get('overall_status', 'N/A')}, ISCCA: {iscca_report.get('status', 'N/A')}"
+                })
+            except Exception as exc:
+                 logger.error(f"Error collecting validation results for suggestion from {raw_sugg_item['source_agent_name']}: {exc}", exc_info=True)
+
+
+        final_response = {
+            "input_summary": {"target_text_chunk": target_text, "fas_name": fas_name},
+            "agent_processing_log": agent_processing_log,
+            "validated_suggestions": validated_suggestions_list
+        }
+        return jsonify({"status": "success", "analysis": final_response}), 200
+    except Exception as e:
+        logger.error(f"Error during enhanced chunk analysis (non-streaming): {e}", exc_info=True)
+        return jsonify({"status": "error", "message": f"General analysis error: {str(e)}"}), 500
+
+@app.route('/status', methods=['GET'])
 def get_status_api():
     global asave_context
     return jsonify({
@@ -494,7 +643,7 @@ def get_assistance_stream_api():
                 agent_info = item["source_agent_info"]
                 yield stream_event({"event_type": "progress", "step_code": f"VALIDATION_START_{agent_info['name'].upper()}_Sugg{i}", "agent_name": agent_info['name'], "message": f"Validating suggestion from '{agent_info['name']}'..."})
                 
-                scva_future = executor.submit(asave_context["scva_iscca"].validate_shariah_compliance,
+                scva_future = executor.submit(asave_context["scva_iscca"].validate_shariah_compliance_batched,
                                               proposed_suggestion_object=sugg_payload, shariah_rules_explicit_path=asave_context["shariah_rules_explicit_path"],
                                               ss_vector_store=asave_context["ss_vector_store"],
                                               mined_shariah_rules_path=asave_context["mined_shariah_rules_path"] if os.path.exists(asave_context["mined_shariah_rules_path"]) else None)

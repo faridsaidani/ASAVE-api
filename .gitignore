@@ -93,3 +93,6 @@ poetry.lock
 db_store/
 *.bin
 *.pickle
+
+
+asave_sessions_db

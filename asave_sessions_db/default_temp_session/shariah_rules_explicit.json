@@ -1,16 +1,1429 @@
 [
   {
-    "rule_id": "SR-GHARAR-001",
-    "standard_ref": "General Shari'ah Principle / AAOIFI SS on Gharar",
-    "principle_keywords": ["gharar", "uncertainty", "speculation", "contractual ambiguity"],
-    "description": "Contracts must be free from excessive uncertainty (Gharar) that could lead to disputes. Key elements like subject matter, price, and delivery terms must be clearly defined and ascertainable.",
-    "validation_query_template": "Review the following text: '{suggestion_text}'. Does this text, when considered for inclusion in a financial standard, introduce, permit, or fail to mitigate excessive uncertainty (Gharar) related to '{specific_aspect}'? Provide a 'Compliant', 'Non-Compliant', or 'Potentially Non-Compliant' assessment with a brief explanation based on the principle of minimizing Gharar."
+    "rule_id": "SSRM1_SS10-94C65A08",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Contract",
+      "Permissibility",
+      "Negotiation",
+      "Multiple Parties"
+    ],
+    "description": "It is permissible to initiate multiple Salam contracts with different parties through a process of negotiation.",
+    "validation_query_template": "Does the proposed transaction structure ('{product_details}') involving '{specific_aspect}' (e.g., the setup of several Salam contracts with distinct counterparties) comply with the Shari'ah rule that permits initiating multiple Salam contracts with different parties through negotiation?"
   },
   {
-    "rule_id": "SR-RIBA-001",
-    "standard_ref": "General Shari'ah Principle / AAOIFI SS on Riba",
-    "principle_keywords": ["riba", "interest", "usury", "loan", "excess"],
-    "description": "Any predetermined excess or surplus over and above the principal amount in a loan or exchange of specific commodities is Riba and is prohibited.",
-    "validation_query_template": "Analyze the following text: '{suggestion_text}'. Does this proposed text, particularly concerning '{specific_aspect}', directly or indirectly permit, facilitate, or fail to prevent Riba (interest or prohibited excess)? Provide a 'Compliant', 'Non-Compliant', or 'Potentially Non-Compliant' assessment with a brief explanation."
+    "rule_id": "SSRM1_SS10-A104F553",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Master Agreement",
+      "Successive Contracts",
+      "Permissibility",
+      "Framework Agreement"
+    ],
+    "description": "It is permissible to establish a general framework or a master agreement that outlines an understanding to conclude a series of individual Salam contracts, with each contract being executed at its designated appropriate time.",
+    "validation_query_template": "Does the proposed arrangement ('{product_details}') for future transactions, specifically regarding its structure as '{specific_aspect}', conform to the permissibility of drawing up a general framework or master agreement for successive Salam contracts, where each individual Salam contract is intended to be concluded at its appropriate time?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-7DA2F6C7",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Memorandum of Understanding",
+      "Contract Framework",
+      "Intention of Parties",
+      "Salam",
+      "Contractual Stipulations"
+    ],
+    "description": "In specific instances (referred to as 'this latter case' in the standard), if a transaction is to be concluded based on a memorandum of understanding, this memorandum must clearly define the framework of the contract and the intentions of the contracting parties.",
+    "validation_query_template": "For the proposed transaction ('{product_details}') concerning '{specific_aspect}', if it is concluded using a memorandum of understanding, does this memorandum clearly define the framework of the contract and the intentions of all contracting parties as required by this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-5AA79BD6",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Memorandum of Understanding",
+      "Contract Framework",
+      "Intention of Parties",
+      "Deferred Transaction",
+      "Buy and Sell Agreement"
+    ],
+    "description": "In cases where a transaction's conclusion is deferred to an appropriate future time, it must be based on a memorandum of understanding. This memorandum should clearly define the contract's framework and the intentions of the involved parties to buy and sell.",
+    "validation_query_template": "For the proposed transaction '{suggestion_text}' or detailed in '{product_details}', which involves a deferred conclusion, does a memorandum of understanding exist that clearly outlines '{specific_aspect}', such as the contract framework and the parties' intentions to buy and sell, in accordance with this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-19C62015",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Contract",
+      "Gharar",
+      "Specification",
+      "Determination of Terms"
+    ],
+    "description": "In a Salam contract, the contracting parties are required to mutually determine and agree upon the specific quantity and detailed specifications of the goods, the agreed-upon manner of their delivery, the established basis for determining the price, and the agreed-upon method of payment.",
+    "validation_query_template": "For the proposed Salam transaction ('{product_details}'), have the contracting parties clearly determined and mutually agreed upon the '{specific_aspect}', specifically covering: (a) the quantity and specifications of the goods, (b) the manner of their delivery, (c) the basis for determining the price, and (d) the manner of payment, in accordance with this rule to avoid ambiguity and potential disputes?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-01706378",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Guarantee",
+      "Prospective Arrangements",
+      "Memorandum of Understanding",
+      "Specification",
+      "Contractual Terms"
+    ],
+    "description": "The memorandum of understanding must clearly specify all types of guarantees and any other prospective arrangements related to the transaction.",
+    "validation_query_template": "Regarding the '{suggestion_text}' or '{product_details}', does the accompanying memorandum of understanding clearly specify the '{specific_aspect}' (e.g., types of guarantees, other prospective arrangements) as mandated by this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-D748D1E1",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam Contract",
+      "Separate Execution",
+      "Deferred Delivery",
+      "Contractual Independence",
+      "Timing of Execution"
+    ],
+    "description": "The rule stipulates that individual Salam contracts, even if related (e.g., in a Parallel Salam structure), should be executed separately, each at its own appropriate future date, ensuring the distinctness of each contractual obligation.",
+    "validation_query_template": "For the financial product '{product_details}', specifically concerning its '{specific_aspect}' which involves multiple Salam agreements, does the proposed structure ensure that the execution of each Salam contract will occur separately and at its designated appropriate future date, thereby maintaining the independence of each contractual obligation as required by this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-EEFAC312",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam Contract",
+      "Memorandum of Understanding",
+      "Contractual Incorporation",
+      "Binding Terms",
+      "Agreement"
+    ],
+    "description": "If a Salam contract is finalized based on the terms previously agreed upon in a memorandum of understanding, the contents of that memorandum become an integral and binding part of the formal Salam contract.",
+    "validation_query_template": "For the proposed Salam transaction ('{product_details}'), if it is based on a prior memorandum of understanding ('{memorandum_reference}'), do the terms of the final Salam contract fully and explicitly incorporate all agreed-upon stipulations from the said memorandum, ensuring the memorandum's contents are treated as part and parcel of the contract?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-EB04F41B",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Mutual Consent",
+      "Stipulation",
+      "Contractual Terms",
+      "Exception",
+      "Salam Contract"
+    ],
+    "description": "A general principle or default condition (implied but not stated in this fragment) remains applicable, unless the contracting parties have explicitly agreed otherwise at a specific, though incompletely defined, juncture or under certain conditions.",
+    "validation_query_template": "Regarding the transaction '{suggestion_text}' and its '{specific_aspect}', does a mutual agreement between the contracting parties exist, established at a relevant point (e.g., 'when the contract was formed', 'when the terms were specified'), that modifies or supersedes the otherwise applicable default Shari'ah ruling or procedural requirement?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-9BC07880",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Salaf",
+      "Contract Formation",
+      "Wording of Contract",
+      "Deferred Delivery"
+    ],
+    "description": "A Salam contract is validly formed if it uses terms such as 'Salam', 'Salaf', 'sale', or any other wording that clearly indicates an agreement for the sale of a specified commodity with deferred delivery in return for immediate payment of the price.",
+    "validation_query_template": "Does the terminology used in the proposed contract ('{suggestion_text}'), specifically in its '{specific_aspect}' (e.g., contract designation or formation clause), conform to the permissible terms for a Salam contract, such as 'Salam', 'Salaf', 'sale', or any other wording clearly indicating a sale of a prescribed commodity with deferred delivery for immediate payment, as per this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-C9F909CD",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Capital",
+      "Fungible Goods",
+      "Riba",
+      "Permissibility"
+    ],
+    "description": "It is permissible for the capital (Ra's al-Mal) in a Salam contract to be in the form of fungible goods, such as wheat or other cereals, provided that the contracting parties ensure the transaction structure does not result in Riba.",
+    "validation_query_template": "For the proposed Salam transaction ('{suggestion_text}'), where the capital is specified as fungible goods ('{specific_aspect}'), does the transaction mechanism ensure that no Riba is involved, in accordance with this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-17E3962A",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Capital (Ra's al-Mal)",
+      "Assets (Mal)",
+      "In-kind Payment",
+      "Permissibility"
+    ],
+    "description": "In a Salam contract, the capital (Ra's al-Mal) is permitted to be in the form of items possessing material value, such as livestock, rather than solely monetary currency.",
+    "validation_query_template": "Does the capital provided in the Salam transaction ('{suggestion_text}') for '{specific_aspect}' consist of items of material value, such as livestock or other tangible assets, as permitted by this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-7646AA21",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Usufruct",
+      "Permissibility",
+      "Asset",
+      "Specified Period",
+      "Contractual Subject Matter"
+    ],
+    "description": "It is permissible for the subject matter of a contract to be the general usufruct (benefit of use) of a specifically identified asset, such as the right to inhabit a house or utilize an aircraft or ship, for a clearly defined duration.",
+    "validation_query_template": "Regarding the proposed transaction ('{suggestion_text}'), if the subject matter involves usufruct ('{specific_aspect_usufruct_details}'), does this usufruct pertain to a particular asset and is it for a specified period, thereby complying with this rule on permissible forms of usufruct as contractual subject matter?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-C67D323F",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam Contract",
+      "Capital (Ra's al-Mal)",
+      "Immediate Payment",
+      "Contract Conclusion",
+      "Possession (Qabd)"
+    ],
+    "description": "This rule mandates that in a Salam contract, the full amount of the capital (purchase price) must be paid by the buyer to the seller immediately upon concluding the contract, at the same location where the contract is finalized.",
+    "validation_query_template": "For the proposed Salam transaction detailed in '{product_details}', specifically concerning the payment of capital as outlined in '{specific_aspect_payment_terms}', is the capital paid immediately and in full at the place where the contract is concluded, in compliance with this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-B0315F0B",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam Contract",
+      "Payment of Capital",
+      "Delayed Payment",
+      "Exception",
+      "Permissibility"
+    ],
+    "description": "As an exception to the general rule requiring immediate payment of capital in a Salam contract at the place and time of contract conclusion, the payment may be permissibly delayed for a short period, specifically for two or three days.",
+    "validation_query_template": "For the proposed Salam transaction ('{product_details}'), if the payment of capital ('{specific_aspect}') is not made immediately at the contract's conclusion, does the duration of the delay adhere to the permissible exception of two to three days as stated in this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-8CCB9456",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Fungibles (Mithliyyat)",
+      "Replacement by Like",
+      "Destruction (Halak)",
+      "Non-Valuation",
+      "Guarantee (Daman)"
+    ],
+    "description": "Fungible items, if destroyed, can be replaced by other similar fungible items without the need to assess the monetary value of either the destroyed item or its replacement.",
+    "validation_query_template": "In the transaction '{suggestion_text}' involving '{product_details}', if a fungible item ('{specific_aspect}') is destroyed, does the proposed method of replacement ensure that another similar fungible item is provided without assessing the value of the destroyed item or the replacing item, as per this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-FD0C6A1E",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Stipulated Delay",
+      "Delivery Period",
+      "Al-Muslam Fihi",
+      "Contract Validity"
+    ],
+    "description": "A pre-stipulated short delay within a Salam contract is permissible and will not affect the contract's validity, provided that the duration of this delay is strictly less than the delivery period specified for the subject matter (al-Muslam Fihi).",
+    "validation_query_template": "For the Salam contract detailed in '{suggestion_text}', if a short delay is stipulated concerning '{specific_aspect, e.g., payment of capital or a minor contractual obligation}', is the duration of this stipulated delay ('{delay_duration}') less than the delivery period for the al-Muslam Fihi ('{muslam_fihi_delivery_period}')? Analyze to ensure the Salam contract's validity as per this rule."
+  },
+  {
+    "rule_id": "SSRM1_SS10-EBBF051F",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Debt as Salam Capital",
+      "Permissibility",
+      "Salam Contract",
+      "Existing Debt",
+      "Loan"
+    ],
+    "description": "It is prohibited to use an existing debt as the capital (Ra's al-Mal) for a Salam contract. This includes using loans or debts owed by the seller to the financial institution from previous transactions as the capital for the Salam.",
+    "validation_query_template": "In the proposed Salam transaction ('{suggestion_text}'), is the capital ('{specific_aspect}') being sourced from an existing debt, such as a loan or an outstanding amount owed by the seller to the institution from a previous transaction? Verify compliance with the rule prohibiting the recognition of debt as Salam capital."
+  },
+  {
+    "rule_id": "SSRM1_SS10-47D8A966",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Fungible Goods",
+      "Permissibility",
+      "Riba"
+    ],
+    "description": "Salam contracts are permitted for fungible goods, which are items that can be weighed, measured, or counted and whose individual units do not significantly differ from one another, on the condition that the contract does not lead to Riba.",
+    "validation_query_template": "For the proposed Salam transaction ('{suggestion_text}'), specifically concerning the goods identified as '{specific_aspect}':\n1. Do these goods meet the definition of fungible items (i.e., they can be weighed, measured, or counted, and their individual units do not significantly differ)?\n2. Does the transaction structure ensure that no Riba will result from it?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-38B0E303",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Subject Matter (Al-Ma'qud 'Alayh)",
+      "Standardization",
+      "Fungibility",
+      "Specification (Wasf)"
+    ],
+    "description": "Variations in the quantity (numbers) of certain manufactured goods are deemed inconsequential. This applies if these goods are produced by companies in approximate units, are identified by trademarks, possess standardized specifications, and are regularly and commonly available at any time.",
+    "validation_query_template": "Does the product '{product_details}' in the proposed transaction '{suggestion_text}' meet the criteria (manufactured in approximate units, identified by trademarks, possessing standardized specifications, and being regularly and commonly available) that allow for variations in its quantity ('{specific_aspect_of_quantity_variation}') to be considered inconsequential under this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-98117984",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Specificity",
+      "Gharar",
+      "Permissibility",
+      "Subject Matter"
+    ],
+    "description": "In a Salam contract, it is not permissible to specify the subject matter as a uniquely identified item, for example, 'this specific car'. The item to be delivered must be described by its general specifications and characteristics rather than being a particular, designated object.",
+    "validation_query_template": "For the proposed Salam transaction ('{suggestion_text}'), is the subject matter ('{specific_aspect}') defined as a specific, uniquely identified item (e.g., 'this particular car' or an item with a unique serial number making it non-fungible for the contract's purpose at the time of contracting) rather than by its general specifications? Evaluate if this level of specificity for the subject matter makes the Salam contract non-compliant with the rule prohibiting Salam for uniquely identified items."
+  },
+  {
+    "rule_id": "SSRM1_SS10-C0167984",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Permissibility",
+      "Liability",
+      "Subjectivity",
+      "Gharar"
+    ],
+    "description": "It is not permissible to engage in a Salam contract for items where the seller cannot be held responsible for delivery or quality, such as land, buildings, or trees. Additionally, Salam is not permitted for articles whose value is determined by subjective assessment, such as jewellery and antiques, due to the inherent uncertainty and potential for disputes.",
+    "validation_query_template": "Does the proposed Salam transaction ('{suggestion_text}') involve an item ('{product_details}') for which the seller cannot be held responsible (e.g., land, buildings, trees), or an item whose value is subject to change based on subjective assessment (e.g., jewellery, antiques)? Evaluate if this aspect renders the transaction impermissible under this rule."
+  },
+  {
+    "rule_id": "SSRM1_SS10-E4EC8C35",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Al-Muslam Fihi",
+      "Salam Contract",
+      "Specificity",
+      "Gharar",
+      "Permissibility"
+    ],
+    "description": "It is not permissible in a Salam contract to stipulate that the subject matter (al-Muslam Fihi) must be sourced from a specific, designated piece of land.",
+    "validation_query_template": "Does the proposed Salam transaction ('{transaction_details}') stipulate that the al-Muslam Fihi, as detailed in '{al_muslam_fihi_clause}', must originate from a specific piece of land ('{land_specification_details}')? Analyze if this condition contravenes the prohibition against specifying a particular land source for al-Muslam Fihi."
+  },
+  {
+    "rule_id": "SSRM1_SS10-C0AB5696",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Delivery",
+      "Contract Specification",
+      "Source of Goods",
+      "Permissibility"
+    ],
+    "description": "In a Salam contract, on the delivery date, the seller has the discretion to provide the buyer with any items that meet the agreed-upon contract specifications. The origin of these items, whether from the seller's own production (e.g., fields or factories) or sourced externally, is immaterial.",
+    "validation_query_template": "Regarding the proposed Salam transaction ('{suggestion_text}'), if the seller intends to source the deliverable goods ('{specific_aspect}') from a third party, does this arrangement comply with the Shari'ah rule allowing the seller to present any items meeting contract specifications, irrespective of their origin (e.g., own production or elsewhere)?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-2334D55C",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Al-Muslam Fihi",
+      "Monetary Capital",
+      "Riba al-Nasi'ah",
+      "Sarf"
+    ],
+    "description": "It is impermissible for the subject matter of a Salam contract (al-Muslam Fihi), which is to be delivered at a future date, to be an amount of currency, gold, or silver, if the capital (Ra's al-Mal) advanced for the Salam contract was itself currency, gold, or silver. This rule is established to prevent Riba al-Nasi'ah (interest arising from deferment in the exchange of like monetary items) and to avoid violations of Sarf (currency exchange) rules, which typically require spot settlement when both countervalues are monetary.",
+    "validation_query_template": "Does the proposed Salam transaction ('{suggestion_text}') where the subject matter (al-Muslam Fihi) is '{specific_aspect_muslam_fihi}' (e.g., an amount of currency, gold, or silver) comply with the prohibition against such items as al-Muslam Fihi when the capital of the Salam contract is also monetary? Analyze how this transaction avoids Riba al-Nasi'ah or violations of Sarf principles."
+  },
+  {
+    "rule_id": "SSRM1_SS10-80A4829C",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Al-Muslam Fihi",
+      "Currency Exchange",
+      "Riba",
+      "Permissibility"
+    ],
+    "description": "It is prohibited for the subject matter of a Salam contract (al-Muslam Fihi) to be an amount of currency, gold, or silver if the capital for that Salam contract was also paid in the form of currency, gold, or silver. This is to prevent transactions that could lead to Riba.",
+    "validation_query_template": "For the proposed Salam transaction detailed in '{product_details}', if the capital is paid in currency, gold, or silver, is the al-Muslam Fihi (subject matter, specifically '{specific_aspect}') also an amount of currency, gold, or silver? Evaluate compliance with the rule prohibiting al-Muslam Fihi from being currency, gold, or silver when the capital is of the same nature."
+  },
+  {
+    "rule_id": "SSRM1_SS10-5D936CF0",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Al-Muslam Fihi",
+      "Quantity",
+      "Knowledge",
+      "Salam Contract",
+      "Gharar"
+    ],
+    "description": "It is a mandatory requirement in a Salam contract for all contracting parties to have explicit knowledge of the precise quantity of the subject matter (al-Muslam Fihi).",
+    "validation_query_template": "For the proposed Salam transaction ('{product_details}'), is the quantity of al-Muslam Fihi ('{specific_aspect}') clearly specified and known to all parties involved, ensuring no ambiguity or uncertainty (Gharar) regarding this aspect?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-2EC9A0C4",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Al-Muslam Fihi",
+      "Quantity Specification",
+      "Gharar",
+      "Measurement Standards"
+    ],
+    "description": "In a Salam contract, the quantity of each item to be delivered (Al-Muslam Fihi) must be precisely determined according to its specific nature and condition, utilizing standard units of weight, measurement (e.g., length, area), volume, or number, as appropriate, to prevent ambiguity and uncertainty (Gharar).",
+    "validation_query_template": "For the proposed Salam transaction detailed in '{product_details}', specifically concerning the item '{specific_aspect}', is its quantity clearly and precisely determined using methods and units (e.g., weight, measurement, volume, or number) appropriate to its nature and condition, thereby eliminating any potential for Gharar (uncertainty) as required by this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-55E4A638",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Al-Muslam Fihi",
+      "Availability",
+      "Delivery Obligation",
+      "Gharar Mitigation"
+    ],
+    "description": "It is a mandatory condition in a Salam contract that the subject matter (al-Muslam Fihi) must be commonly and normally available at the specified delivery location on the agreed-upon delivery date. This ensures the seller's ability to procure and deliver the commodity, thereby fulfilling their contractual obligation to the buyer and mitigating excessive uncertainty.",
+    "validation_query_template": "For the proposed Salam transaction ('{suggestion_text}') concerning the commodity '{specific_aspect}' (al-Muslam Fihi), is it reasonably expected that this commodity will be commonly available under normal circumstances at the designated delivery location on the specified delivery date, ensuring the seller can fulfill their delivery obligation to the buyer?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-ACED102D",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "al-Muslam Fihi",
+      "Delivery Date",
+      "Certainty",
+      "Gharar"
+    ],
+    "description": "The delivery date for al-Muslam Fihi (the subject matter in a Salam contract) must be clearly specified and known to eliminate any uncertainty or ambiguity that could potentially lead to a dispute between the contracting parties.",
+    "validation_query_template": "In the proposed Salam transaction ('{product_details}'), is the delivery date for al-Muslam Fihi ('{specific_aspect}') defined with sufficient clarity to remove all uncertainty and ambiguity, thereby preventing any potential for future disputes, in accordance with this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-3D6EFC1F",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Al-Muslam Fihi",
+      "Instalment Delivery",
+      "Upfront Capital Payment",
+      "Permissibility"
+    ],
+    "description": "It is permissible for contracting parties in a Salam agreement to set various dates for the delivery of al-Muslam Fihi in instalments, provided the full capital of Salam was paid at the time the contract was originally concluded.",
+    "validation_query_template": "Regarding the transaction ('{suggestion_text}') for '{product_details}', if the delivery of al-Muslam Fihi ('{specific_aspect}') is arranged in instalments, does this arrangement comply with the rule requiring full payment of the Salam capital at the time the contract was originally concluded?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-A8E60F6F",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam Contract",
+      "Al-Muslam Fihi",
+      "Place of Delivery",
+      "Contractual Stipulation",
+      "Mutual Agreement"
+    ],
+    "description": "In a Salam contract, it is permissible for the contracting parties to mutually agree upon and specify the designated place for the delivery of the subject matter (al-Muslam Fihi).",
+    "validation_query_template": "For the proposed Salam transaction ('{suggestion_text}'), does the agreement clearly stipulate the place of delivery for al-Muslam Fihi ('{specific_aspect}') as mutually designated by the contracting parties, in line with this rule permitting such designation?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-8176DD47",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Capital Payment",
+      "Contract Conclusion",
+      "Timeliness",
+      "Condition of Validity"
+    ],
+    "description": "It is a condition for the validity of a Salam contract that the buyer pays the full capital (price) to the seller at the time the contract is originally concluded.",
+    "validation_query_template": "Regarding the Salam transaction proposed in '{suggestion_text}' or detailed in '{product_details}' for the commodity '{specific_aspect}', was the full capital paid by the buyer to the seller at the exact time the contract was originally concluded, in accordance with this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-3986401E",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Al-Muslam Fihi",
+      "Delivery Location",
+      "Contractual Stipulation",
+      "Mutual Consent"
+    ],
+    "description": "The contracting parties in a Salam agreement have the right, by principle, to mutually agree upon and specify the location for the delivery of the subject matter (al-Muslam Fihi).",
+    "validation_query_template": "For the Salam contract ('{product_details}'), does it specify a designated place for the delivery of al-Muslam Fihi ('{specific_aspect}'), and was this designation mutually agreed upon by the contracting parties in accordance with this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-CAADAD5D",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Contract",
+      "Delivery",
+      "Place of Delivery",
+      "Default Rule"
+    ],
+    "description": "If the parties to a Salam contract do not specify the place of delivery for the subject matter (al-Muslam Fihi), the default place of delivery will be the location where the contract was concluded, unless it is impossible to make delivery at that location.",
+    "validation_query_template": "For the Salam contract detailed in '{product_details}', if the place of delivery for '{specific_aspect}' (e.g., the goods to be delivered) is not explicitly determined by the contracting parties, does the contract stipulate that the place of contract conclusion will be regarded as the place of delivery, and does it account for scenarios where delivery at that location becomes impossible, in accordance with this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-A2EECF6B",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Al-Muslam Fihi",
+      "Substitute",
+      "Market Value",
+      "Delivery Conditions"
+    ],
+    "description": "In a Salam contract, a substitute for the al-Muslam Fihi (the commodity to be delivered) is permissible at the time of delivery if two conditions are met: (1) The substitute itself must be suitable to be exchanged as al-Muslam Fihi for the capital paid in the Salam contract. (2) The market value of the substitute at the time of delivery must not be greater than the market value of the originally specified al-Muslam Fihi at that same time.",
+    "validation_query_template": "Regarding the proposed substitution in the Salam transaction ('{transaction_details}'), where a substitute ('{substitute_item_description}') is offered for the original al-Muslam Fihi ('{original_item_description}'):\n1. Is the proposed substitute ('{substitute_item_description}') suitable in itself to be considered an al-Muslam Fihi for the capital paid in this Salam contract?\n2. At the time of delivery, is the market value of the substitute ('{substitute_item_description}') not greater than the market value of the original al-Muslam Fihi ('{original_item_description}')?\nAnalyze compliance based on the conditions for substituting al-Muslam Fihi."
+  },
+  {
+    "rule_id": "SSRM1_SS10-3F73E449",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Contract Cancellation",
+      "Mutual Consent",
+      "Repayment",
+      "Permissibility"
+    ],
+    "description": "The cancellation of an entire Salam contract is permissible if both contracting parties mutually agree to it, provided that the capital of Salam (amount paid by the buyer) is repaid in full to the buyer.",
+    "validation_query_template": "For the proposed cancellation of the Salam contract ('{suggestion_text}') related to '{product_details}', does it satisfy the conditions that '{specific_aspect}' such as mutual agreement between both parties is confirmed and the full repayment of the Salam capital is ensured, as required for permissibility under this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-C9AD2786",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Al-Muslam Fihi",
+      "Partial Cancellation",
+      "Repayment",
+      "Permissibility"
+    ],
+    "description": "Partial cancellation of a Salam contract, specifically the cancellation of the delivery of a part of the agreed-upon goods (al-Muslam Fihi), is permissible provided that a corresponding portion of the advanced capital (Salam capital) is repaid for the undelivered part.",
+    "validation_query_template": "Does the proposed partial cancellation within the Salam transaction ('{suggestion_text}'), specifically regarding the non-delivery of '{specific_part_of_al_muslam_fihi}', ensure a corresponding repayment of the Salam capital for this undelivered portion, thereby complying with the rule on permissible partial cancellation?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-0D749991",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Al-Muslam Fihi",
+      "Obligation",
+      "Delivery",
+      "Contractual Specifications"
+    ],
+    "description": "In a Salam contract, the seller is obligated to deliver the subject matter (al-Muslam Fihi) to the buyer on the agreed-upon due date, ensuring it conforms to all contractual terms, including the specified quality, quantity, and other characteristics.",
+    "validation_query_template": "For the proposed Salam transaction ('{suggestion_text}'), does the seller explicitly commit to delivering the al-Muslam Fihi ('{specific_aspect}') to the buyer by the contractually agreed due date, and in strict accordance with all stipulated terms, such as specifications and quantity, as required by this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-8D3C0281",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam Contract",
+      "Obligation of Buyer",
+      "Acceptance of Goods",
+      "Contractual Specifications",
+      "Conformity"
+    ],
+    "description": "In a Salam contract, the buyer is obligated to accept the delivered goods provided these goods conform to the specifications stipulated and agreed upon in the contract.",
+    "validation_query_template": "Does the proposed transaction ('{suggestion_text}') ensure that the buyer is obligated to accept the goods ('{specific_aspect}') if, and only if, they meet the pre-agreed specifications outlined in the contract, in accordance with this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-A1E1160E",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Contract",
+      "Obligation",
+      "Acceptance",
+      "Specifications",
+      "Goods"
+    ],
+    "description": "It is obligatory for the buyer to accept the delivered goods, provided that these goods conform to the specifications stipulated in the contract.",
+    "validation_query_template": "For the transaction '{product_details}', if the goods delivered for '{specific_aspect}' meet all contractually agreed specifications, is the buyer still permitted to refuse acceptance? Analyze based on the buyer's obligation to accept conforming goods as per this rule."
+  },
+  {
+    "rule_id": "SSRM1_SS10-9FD866CF",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Al-Muslam Fihi",
+      "Buyer's Obligation",
+      "Acceptance of Goods",
+      "Compulsion"
+    ],
+    "description": "In a Salam contract, if the buyer (purchaser of al-Muslam Fihi) refuses to accept the delivered goods (al-Muslam Fihi) that conform to the agreed contractual specifications, the buyer is obligated and shall be compelled to accept them.",
+    "validation_query_template": "Regarding the Salam transaction outlined in '{product_details}', if the buyer refuses to accept the delivered al-Muslam Fihi ('{specific_aspect}'), does this rule stipulate that the buyer must be compelled to accept the goods, provided they meet all agreed-upon contractual specifications?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-904BEAA0",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Settlement (Sulh)",
+      "Acceptance of Goods",
+      "Discounted Price",
+      "Mutual Consent (Taraadi)",
+      "Permissibility (Jawaz)"
+    ],
+    "description": "It is permissible for contracting parties to mutually agree on a settlement for the acceptance of goods, even if this settlement includes accepting the goods at a discounted price.",
+    "validation_query_template": "Does the proposed settlement ('{suggestion_text}') for the transaction '{product_details}', specifically regarding '{specific_aspect_e.g_acceptance_of_goods_with_price_adjustment}', comply with the Shari'ah rule permitting parties to mutually agree on terms for accepting goods, even at a discounted price?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-5DBCA39E",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Al-Muslam Fihi",
+      "Genus of Goods",
+      "Delivery",
+      "Prohibition"
+    ],
+    "description": "In a Salam contract, a seller is prohibited from delivering the subject matter (al-Muslam Fihi) as a commodity different from what was contractually agreed upon, if this alternative commodity belongs to the same genus as the originally specified al-Muslam Fihi. For example, if corn was the agreed al-Muslam Fihi, delivering wheat (another grain, thus considered of the same genus in this context) instead is not permitted.",
+    "validation_query_template": "Does the proposed delivery in the Salam transaction ('{product_details}'), specifically substituting the agreed-upon al-Muslam Fihi '{agreed_commodity}' with '{delivered_commodity}', violate this rule? Analyze based on the principle that such substitution is prohibited if '{delivered_commodity}' and '{agreed_commodity}' are considered to belong to the same genus."
+  },
+  {
+    "rule_id": "SSRM1_SS10-D4ED712C",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Al-Muslam Fihi",
+      "Delivery",
+      "Replacement of Goods",
+      "Contractual Compliance"
+    ],
+    "description": "The delivery of the Salam subject matter (al-Muslam Fihi) as a commodity type different from what was originally agreed upon is permissible only if it strictly adheres to the conditions specified for replacing al-Muslam Fihi with other goods, as detailed in item 4/2 of the standard.",
+    "validation_query_template": "If a Salam transaction ('{product_details}') involves the delivery of al-Muslam Fihi as a different type of commodity ('{specific_aspect_delivered_item}') than originally agreed, does this proposed delivery ('{suggestion_text}') fully meet all the stipulated conditions for replacement as per this rule and the referenced item 4/2?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-9D1B2D94",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Al-Muslam Fihi",
+      "Early Delivery",
+      "Agreed Specifications",
+      "Permissibility"
+    ],
+    "description": "Delivery of the subject matter in a Salam contract (al-Muslam Fihi) is permitted before the scheduled due date, provided that the delivered goods conform to the specifications and quantities agreed upon in the contract.",
+    "validation_query_template": "For the transaction ('{suggestion_text}') involving a Salam contract, if early delivery of al-Muslam Fihi ('{specific_aspect}') is proposed, does this arrangement ensure that the goods delivered before the due date will conform to the agreed specifications and quantities, as required by this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-2FD4A626",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam Contract",
+      "Khiyar",
+      "Acceptance of Goods",
+      "Rejection of Goods",
+      "Valid Reason"
+    ],
+    "description": "A buyer who possesses a valid reason for rejecting goods cannot be compelled to accept them.",
+    "validation_query_template": "Does the proposed transaction ('{suggestion_text}') regarding '{specific_aspect}' (e.g., the buyer's right to reject goods or terms of acceptance) ensure that if the buyer has a valid reason for rejecting the goods, they will not be compelled to accept them, in compliance with this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-2BF8C90D",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam (Forward Sale)",
+      "Acceptance of Goods (Qabul)",
+      "Compulsion (Ijbar)",
+      "Settlement (Sulh)",
+      "Contractual Obligation (Iltizam)"
+    ],
+    "description": "In a Salam contract, if the parties fail to agree on a settlement regarding the terms for acceptance of the delivered goods (e.g., if a discount for non-conforming goods is not mutually agreed upon), the buyer is then obligated to accept the goods.",
+    "validation_query_template": "Regarding the Salam contract ('{product_details}'), if the parties fail to reach a settlement on the terms for accepting the goods, particularly concerning '{specific_aspect_of_goods_or_delivery}', does the proposed resolution ('{suggestion_text}') ensure that the buyer is compelled to accept the goods as per this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-A42BA44C",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Buyer's Rights",
+      "Rejection of Goods",
+      "Valid Reason",
+      "Non-Compulsion"
+    ],
+    "description": "A buyer in a Salam contract is not compelled to accept delivered goods if a Shari'ah-valid reason for rejecting them exists.",
+    "validation_query_template": "Does the proposed Salam transaction ('{product_details}') ensure that if the buyer has a valid reason for rejecting the goods, particularly concerning '{specific_aspect_of_goods_or_delivery}', they will not be compelled to accept them, in accordance with this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-4D19D34A",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Acceptance of Goods",
+      "Buyer's Obligation",
+      "Invalid Rejection",
+      "Compulsion"
+    ],
+    "description": "In a Salam contract, if the buyer does not possess a valid Shari'ah-compliant reason for rejecting the delivered goods, they are then obligated and will be compelled to accept them.",
+    "validation_query_template": "Does the proposed Salam transaction ('{suggestion_text}'), specifically regarding its '{specific_aspect_of_acceptance_and_rejection_clause}', ensure that the buyer is compelled to accept the goods if, and only if, they lack a valid Shari'ah reason for rejecting said goods, in accordance with this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-6D8BBD40",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Insolvency",
+      "Seller's Obligation",
+      "Extension of Time",
+      "Salam",
+      "Leniency to Debtor"
+    ],
+    "description": "If a seller, due to insolvency, fails to fulfill their delivery obligation in a Salam contract, they must be granted an extension of time for delivery.",
+    "validation_query_template": "In the context of a Salam transaction ('{product_details}'), if the seller responsible for '{specific_aspect}' (e.g., delivery of goods) becomes insolvent and consequently fails to perform their delivery obligation, does the proposed contractual arrangement or resolution plan ensure that the seller is granted an appropriate extension of time for delivery, as mandated by this Shari'ah rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-84F140D8",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Al-Muslam Fihi",
+      "Penalty Clause",
+      "Delay in Delivery",
+      "Prohibition"
+    ],
+    "description": "It is prohibited to include a condition in a Salam contract that imposes a penalty for any delay in the delivery of the subject matter (al-Muslam Fihi).",
+    "validation_query_template": "Does the proposed Salam transaction ('{suggestion_text}' or '{product_details}') include a penalty clause for '{specific_aspect}' such as delay in the delivery of al-Muslam Fihi? This rule states that such penalty clauses are not permitted."
+  },
+  {
+    "rule_id": "SSRM1_SS10-9635B19E",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Al-Muslam Fihi",
+      "Delivery Failure",
+      "Buyer's Remedies",
+      "Contractual Rights"
+    ],
+    "description": "In a Salam contract, if the seller fails to deliver all or part of the agreed-upon goods (al-Muslam Fihi) on the specified due date, the buyer is entitled to certain options.",
+    "validation_query_template": "For the Salam contract detailed in '{product_details}', what remedies or options are stipulated for the buyer if the seller fails to deliver the specified al-Muslam Fihi ('{specific_aspect}') by the agreed due date, in accordance with this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-62247605",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam Contract",
+      "Al-Muslam Fihi",
+      "Delivery",
+      "Availability",
+      "Contractual Obligation"
+    ],
+    "description": "In a Salam contract, it is a requirement to wait until the subject matter (al-Muslam Fihi) becomes actually available before its delivery can be effected.",
+    "validation_query_template": "For the proposed Salam transaction ('{suggestion_text}'), specifically concerning the delivery of '{specific_aspect}' (al-Muslam Fihi) as detailed in '{product_details}', does the contractual framework or operational process ensure that the seller will wait until the '{specific_aspect}' is genuinely available before proceeding with delivery, in accordance with this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-95AFFFB4",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Faskh al-'Aqd (Contract Cancellation)",
+      "Istirdad Ra's al-Mal (Capital Recovery)",
+      "Khiyar (Option)",
+      "Al-Muslam Fihi (Subject Matter of Salam)"
+    ],
+    "description": "This rule specifies that in a Salam contract, one of the options available, typically to the buyer (Rab al-Salam) in case of the seller's (Muslam Ilayhi) failure to deliver the subject matter (al-Muslam Fihi), is to cancel the contract and recover the paid capital.",
+    "validation_query_template": "In the context of the Salam transaction detailed in '{product_details}', if the seller fails to deliver '{specific_aspect}' (the al-Muslam Fihi) as agreed, does the contract explicitly provide the buyer with the option to cancel the contract and recover the full capital paid, in accordance with this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-2A969D41",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "al-Muslam Fihi",
+      "Replacement",
+      "Permissibility",
+      "Mutual Consent"
+    ],
+    "description": "It is permissible for the contracting parties in a Salam contract to mutually agree to replace the originally specified subject matter (al-Muslam Fihi) with other goods.",
+    "validation_query_template": "For the Salam transaction detailed in '{product_details}', if there is a proposal for '{specific_aspect}' involving the replacement of the original al-Muslam Fihi, does this replacement occur with the mutual agreement of both parties, thereby adhering to the permissibility of substituting al-Muslam Fihi with other goods as stated in this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-D5DB9158",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Parallel Salam",
+      "Contract",
+      "Permissibility",
+      "Delivery of Goods"
+    ],
+    "description": "A seller in a Salam contract is permitted to enter into a distinct and independent parallel Salam contract with a third party to procure goods of similar specifications to those in the first Salam contract. This enables the seller to fulfill the original Salam obligation by delivering these acquired goods.",
+    "validation_query_template": "Does the proposed transaction ('{suggestion_text}') involving a parallel Salam arrangement ('{specific_aspect_details}') ensure that the seller's contract with a third party is 'separate and independent' from the original Salam contract, and for goods of 'similar specification' to those in the initial Salam contract, as per this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-1B262243",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Parallel Salam",
+      "Salam Contract",
+      "Commodity Sale",
+      "Matching Description",
+      "Permissibility"
+    ],
+    "description": "A buyer in an initial Salam contract is permitted to enter into a distinct, parallel Salam contract with a third party. The purpose of this parallel Salam is to sell a commodity, on a Salam basis, provided that the description of this commodity precisely corresponds to the description of the commodity being purchased in the original Salam contract.",
+    "validation_query_template": "Does the proposed parallel Salam ('{product_details}') ensure that the commodity to be sold under it ('{specific_aspect_commodity_description}') has a description that precisely corresponds to the commodity description in the initial Salam contract, as required by this rule for permissibility?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-ECE70CCE",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Parallel Salam",
+      "Contractual Obligation",
+      "Independence of Contracts",
+      "Non-cancellation"
+    ],
+    "description": "A party who experiences loss or damage under an initial Salam contract does not have the right to terminate a subsequent, separate Parallel Salam contract, nor to delay the performance of their obligations under that Parallel Salam contract, based on such loss or damage. The two contracts are considered independent.",
+    "validation_query_template": "In the proposed Parallel Salam arrangement ('{product_details}'), if the party acting as the seller in the Parallel Salam (who is the buyer in the initial Salam) incurs '{specific_aspect_loss_or_damage}' under the first Salam contract, does this situation ('{suggestion_text}') lead them to attempt to terminate the Parallel Salam contract or delay its performance? Analyze based on the principle that obligations under the Parallel Salam are independent of the outcome of the first Salam contract."
+  },
+  {
+    "rule_id": "SSRM1_SS10-945A94A3",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Parallel Salam",
+      "Rule Application",
+      "Contractual Equivalence",
+      "AAOIFI"
+    ],
+    "description": "All Shari'ah rules governing Salam contracts, as detailed in items 1 through 5 of Shariah Standard ss_10_salam_and_parallel_salam, are equally and fully applicable to Parallel Salam contracts.",
+    "validation_query_template": "Does the proposed Parallel Salam transaction ('{product_details}') ensure that all rules applicable to a standard Salam contract, as specified in items 1-5 of Shariah Standard ss_10_salam_and_parallel_salam, are also applied to this Parallel Salam, particularly with respect to '{specific_aspect}'?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-E723EE21",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Sukuk",
+      "Salam",
+      "Debt (Dayn)",
+      "Tradability",
+      "Permissibility"
+    ],
+    "description": "It is prohibited to issue Sukuk that are tradable if these Sukuk are based on debt originating from a Salam contract.",
+    "validation_query_template": "For the proposed Sukuk issuance ('{product_details}'), are these Sukuk intended to be tradable, and is their underlying basis the debt arising from a Salam contract ('{specific_aspect}')? Analyze if this structure complies with the prohibition against issuing tradable Sukuk based on Salam debt."
+  },
+  {
+    "rule_id": "SSRM1_SS10-1E4CC941",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Permissibility",
+      "Qur`an",
+      "Sunnah",
+      "Ijma’"
+    ],
+    "description": "The permissibility of a Salam contract is established and derived from the primary Shari'ah sources: the Qur'an, the Sunnah, and the consensus of Islamic scholars (Ijma').",
+    "validation_query_template": "For the financial product '{product_details}' which utilizes a Salam contract, confirm that its underlying permissibility is recognized and based on the established Shari'ah sources: the Qur'an, Sunnah, and Ijma', as stated in this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-D6BBBFFA",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Future Obligations",
+      "Written Contract",
+      "Documentation",
+      "Fixed Period",
+      "Debt Recording"
+    ],
+    "description": "When believers engage in transactions involving future obligations that are due in a fixed period, these transactions must be documented in writing.",
+    "validation_query_template": "Does the financial product '{product_details}' or transaction '{suggestion_text}', specifically concerning its aspect of '{specific_aspect}' which involves future obligations over a fixed period, ensure that all terms and conditions are reduced to writing as mandated by this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-82CF9D78",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Salaf",
+      "Future Delivery",
+      "Permissibility",
+      "Contract"
+    ],
+    "description": "According to the narration of Ibn Abbas, a Salaf (Salam) contract, which involves the sale of a commodity with guaranteed future delivery, is declared permissible by Allah.",
+    "validation_query_template": "Does the proposed transaction ('{suggestion_text}'), structured as a Salam contract for '{specific_aspect}', ensure the guaranteed future delivery of the underlying commodity, thereby aligning with the permissibility of such contracts as established by the narration of Ibn Abbas?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-5023A2EE",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Permissibility",
+      "Revelation",
+      "Ibn Abbas",
+      "Verse"
+    ],
+    "description": "The permissibility of the Salam contract is affirmed by a report attributed to Ibn Abbas, stating that a specific Quranic verse was revealed for the explicit purpose of legitimizing Salam.",
+    "validation_query_template": "Does the proposed transaction ('{suggestion_text}') or financial product ('{product_details}') involving a Salam contract for '{specific_aspect}' acknowledge and operate within the established Shari'ah permissibility of Salam, as evidenced by the reported statement of Ibn Abbas regarding a specific verse revealed for this purpose?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-321D1E38",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Permissibility",
+      "Revelation",
+      "Verse",
+      "Legitimacy"
+    ],
+    "description": "The legitimacy and permissibility of Salam contracts are established by a specific verse that was revealed for this particular purpose.",
+    "validation_query_template": "Given that this rule confirms Salam's legitimacy through a specific revelatory verse, does the proposed transaction ('{suggestion_text}'), especially concerning '{specific_aspect}', properly qualify as a Salam contract to be covered by this divine sanction?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-8883B512",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Deferred Delivery",
+      "Specification",
+      "Scale",
+      "Weight"
+    ],
+    "description": "In a Salam contract (payment for goods on a deferred delivery basis), the transaction must be based on a clearly specified scale and weight for the goods being exchanged.",
+    "validation_query_template": "For the proposed Salam transaction detailed in '{product_details}', is the '{specific_aspect}' (e.g., quantity of the commodity) clearly defined by a specified scale and weight, as required by this rule to ensure clarity and avoid ambiguity in the contract?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-3EFD91FC",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Deferred Delivery",
+      "Specification",
+      "Certainty",
+      "Gharar Mitigation"
+    ],
+    "description": "In transactions where payment is made for goods to be delivered at a future date (deferred delivery), it is mandatory that the quantity of the goods (defined by a specific scale or weight) and the exact date of delivery are clearly specified at the time of the contract.",
+    "validation_query_template": "For the proposed transaction '{suggestion_text}' involving payment for deferred delivery of '{specific_aspect}', are the quantity (by specified scale or weight) and the exact date of delivery for the goods clearly defined and agreed upon at the inception of the contract, as mandated by this rule to ensure clarity and avoid uncertainty?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-5B05AE71",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Contract",
+      "Permissibility",
+      "Ijma"
+    ],
+    "description": "The rule confirms that there is unanimous agreement among Shari'ah scholars (Ijma) regarding the permissibility of a Salam contract.",
+    "validation_query_template": "For the proposed transaction ('{suggestion_text}'), which is intended to be a Salam contract, does its fundamental permissibility regarding '{specific_aspect}' find validation in the unanimous scholarly consensus (Ijma) on Salam contracts?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-2B458F58",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Sale",
+      "Deferred Delivery",
+      "Specified Goods",
+      "Permissibility"
+    ],
+    "description": "The sale of a specific and determined item, quantified by weight or measure, for delivery at a defined future date is permissible under Shari'ah.",
+    "validation_query_template": "Does the proposed transaction ('{suggestion_text}') regarding '{specific_aspect}' involve the sale of a specific and determined item, quantified by weight or measure, for delivery at a defined future date, thereby complying with the permissibility of such sales as outlined in this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-F4B5C8EA",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Permissibility",
+      "Benefit (Maslaha)",
+      "Business Transactions",
+      "Forward Sale"
+    ],
+    "description": "The Salam contract is permissible in Shari'ah to enable businesses to benefit from this type of forward sale transaction.",
+    "validation_query_template": "Does the proposed transaction ('{suggestion_text}'), specifically concerning '{specific_aspect_of_salam_contract}', utilize the Salam contract in a manner consistent with its Shari'ah permissibility, which is intended to allow businesses to derive benefit?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-D4078749",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Permissibility",
+      "Contract",
+      "Scope of Application",
+      "Non-restriction"
+    ],
+    "description": "The Salam contract, although commonly utilized by agricultural businesses, is not restricted in its permissibility to these fields; its application is allowed in various other sectors.",
+    "validation_query_template": "Does the proposed Salam contract ('{suggestion_text}') for '{product_details}' in the business sector '{specific_sector}' comply with the rule that the permissibility of Salam is not confined to agricultural businesses, allowing its application in diverse fields?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-0BA6E87B",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Investment",
+      "Permissibility",
+      "Scope of Application",
+      "Industry",
+      "Trade"
+    ],
+    "description": "The financing instrument in question can be permissibly utilized for various investment opportunities, explicitly including those within the industrial and trade sectors, beyond its other established applications.",
+    "validation_query_template": "Does the proposed utilization of '{product_details}' for '{specific_aspect}' (e.g., an industrial project or a trade activity) qualify as a permissible investment opportunity within sectors such as industry or trade, as per this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-6E5C2CA2",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Usufruct",
+      "Capital",
+      "Permissibility",
+      "Maliki"
+    ],
+    "description": "The permissibility of using usufruct as capital in a Salam contract is established based on the jurisprudential view of the Maliki scholars.",
+    "validation_query_template": "Does the proposed Salam transaction ('{suggestion_text}'), specifically regarding the presentation of usufruct ('{specific_aspect}') as capital, adhere to the permissibility derived from the Maliki scholars' view as stated in this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-E12F4B86",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Capital",
+      "Immediate Receipt",
+      "Seller's Proceeds",
+      "Shari'ah Maxim"
+    ],
+    "description": "In Salam contracts, the seller's ability to access and utilize the sale proceeds is recognized as equivalent to the immediate receipt of the capital. This recognition is based on established Shari’ah maxims.",
+    "validation_query_template": "For the proposed Salam transaction ('{suggestion_text}'), does the mechanism for the seller's access to and utilization of the sale proceeds ('{specific_aspect}') correctly reflect the Shari'ah principle that this is regarded as immediate receipt of capital? Analyze based on the supporting Shari'ah maxims."
+  },
+  {
+    "rule_id": "SSRM1_SS10-DD56B1CB",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Qabd (Possession)",
+      "Taslim (Delivery)",
+      "Milkiyyah (Ownership)",
+      "Contractual Fulfillment",
+      "Integrality of Possession"
+    ],
+    "description": "The Shari'ah principle states that acquiring possession of a part of an item is legally considered equivalent to acquiring possession of the entire item.",
+    "validation_query_template": "Regarding the transaction involving '{product_details}', if possession is taken of '{specific_part_of_the_item}', does this act constitute taking possession of the entire '{product_details}' for the purpose of '{relevant_legal_or_contractual_consequence}' as per this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-DB9B83D9",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Capital (Ra's al-Mal)",
+      "Knowledge (Ilm)",
+      "Contractual Terms",
+      "Gharar Avoidance"
+    ],
+    "description": "In a Salam contract, it is a mandatory condition that the capital (Ra's al-Mal) must be precisely known and agreed upon by both contracting parties (the buyer/purchaser and the seller) at the time the contract is formed.",
+    "validation_query_template": "For the proposed Salam transaction ('{suggestion_text}'), is '{specific_aspect}' (specifically, the capital of Salam) clearly defined, quantified, and mutually known by both the purchaser and the seller at the moment of contract execution, in accordance with this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-DDAE34BA",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Gharar",
+      "Consideration",
+      "Knowledge",
+      "Certainty",
+      "Contract"
+    ],
+    "description": "The consideration in a transaction must be clearly known and specified to all parties involved to eliminate significant uncertainty (Gharar), which is essential for contractual validity and fairness.",
+    "validation_query_template": "For the proposed transaction ('{suggestion_text}'), is the consideration related to '{specific_aspect}' clearly defined, specified, and known to all parties, thereby sufficiently removing any significant uncertainty (Gharar) as mandated by this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-375650A5",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Capital Payment (Ra's al-Mal)",
+      "Contract Conclusion ('Aqd)",
+      "Possession (Qabd)"
+    ],
+    "description": "This rule stipulates that in a Salam contract, the full agreed-upon capital must be paid by the buyer (purchaser of the commodity) to the seller (supplier of the commodity) at the time the contract is formally concluded.",
+    "validation_query_template": "Does the proposed Salam transaction ('{suggestion_text}'), specifically regarding its '{capital_payment_arrangement_and_timing}', ensure that the capital is fully paid and received by the seller at the conclusion of the contract? Analyze based on this Shari'ah rule requiring immediate payment and possession of the capital in Salam contracts."
+  },
+  {
+    "rule_id": "SSRM1_SS10-80BA9175",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Deferred Delivery",
+      "Salam",
+      "Specification of Subject Matter",
+      "Scale/Measure",
+      "Gharar (Uncertainty)"
+    ],
+    "description": "In transactions where payment is made for goods to be delivered at a future date (deferred delivery), it is a requirement that the scale (i.e., the specific measure, weight, or quantity) of these goods is clearly specified and agreed upon when the contract is made and payment is effected.",
+    "validation_query_template": "For the proposed transaction ('{product_details}') involving '{specific_aspect}' with deferred delivery, has the scale (measure, weight, or quantity) of the goods been clearly and precisely specified and agreed upon at the time of contract and payment, in compliance with this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-4C610474",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Advance Payment",
+      "Capital (Ra's al-Mal)",
+      "Qabd al-Thaman",
+      "Contractual Condition"
+    ],
+    "description": "In a Salam contract, it is a mandatory condition that the full capital (price of the goods) must be paid by the buyer (purchaser) to the seller at the time the contract is concluded, i.e., in advance, before the future delivery of the specified goods.",
+    "validation_query_template": "For the proposed Salam transaction ('{suggestion_text}' or '{product_details}'), specifically concerning the payment of capital for '{specific_aspect}', was the entire capital amount paid in full to the seller at the point of contract initiation, prior to the deferred delivery of the goods, as required by this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-DA631BD4",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Payment",
+      "Timeliness",
+      "Contract Classification",
+      "Advance Payment"
+    ],
+    "description": "For a transaction to be correctly classified as Salam, the payment must be made promptly at the time of contract. If the payment is delayed, the transaction does not meet the criteria for a Salam contract.",
+    "validation_query_template": "Regarding the proposed transaction ('{suggestion_text}') intended as a Salam contract, specifically concerning the payment for '{specific_aspect}', is the payment made in full at the time of contract execution without any delay? If payment is deferred, confirm that the transaction is not being classified or termed as Salam."
+  },
+  {
+    "rule_id": "SSRM1_SS10-FB036145",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Capital Payment",
+      "Advance Payment",
+      "Contract Condition",
+      "Ra's al-Mal"
+    ],
+    "description": "This rule mandates that for a Salam contract to be valid, the capital (price of the goods, also known as Ra's al-Mal) must be paid in full by the buyer to the seller at the time the contract is concluded, meaning in advance. If the capital payment is delayed, the transaction does not meet the criteria for a Salam contract.",
+    "validation_query_template": "For the proposed Salam transaction detailed in '{product_details}', is the capital (Ra's al-Mal) fully paid in advance by the buyer to the seller at the time of contract conclusion, as mandated by the rule: '{suggestion_text}'?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-995E6771",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Capital Payment",
+      "Payment Delay",
+      "Dispersal of Parties",
+      "Sale of Debt for Debt"
+    ],
+    "description": "In a Salam contract, if there is a delay in the payment of the capital by the buyer, and the contracting parties disperse before the capital is fully paid, the transaction is rendered a sale of debt for debt (Bay' al-Kali' bi al-Kali'), which is prohibited.",
+    "validation_query_template": "For the proposed Salam transaction ('{product_details}'), considering the procedures for capital payment and the point of dispersal of contracting parties ('{specific_aspect_payment_and_dispersal_timing}'), is there a risk that a delay in capital payment could occur after the parties have dispersed, thereby classifying the transaction as a prohibited sale of debt for debt according to this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-56A08D1C",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Debt",
+      "Sale of Debt",
+      "Bay al-Dayn bi al-Dayn",
+      "Prohibition",
+      "Unanimity (Ijma)"
+    ],
+    "description": "The sale of debt for debt (Bay al-Dayn bi al-Dayn) is unanimously prohibited by Muslim scholars.",
+    "validation_query_template": "Does the proposed transaction ('{suggestion_text}') or financial product ('{product_details}'), specifically concerning '{specific_aspect}', involve the exchange of one debt for another debt, which is prohibited under the principle of Bay al-Dayn bi al-Dayn as per this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-171EE1B7",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Capital (Ra's al-Mal)",
+      "Debt (Dayn)",
+      "Permissibility",
+      "Advance Payment"
+    ],
+    "description": "It is not permitted for a debt to serve as the capital (Ra's al-Mal) in a Salam contract. The capital must be paid in full at the time of contract and cannot be an existing financial obligation owed by the seller to the buyer or a third party.",
+    "validation_query_template": "Does the proposed Salam transaction ('{suggestion_text}') involve using a pre-existing debt as the capital ('{specific_aspect}')? Analyze if this arrangement complies with the rule prohibiting debt from constituting the capital in a Salam contract."
+  },
+  {
+    "rule_id": "SSRM1_SS10-F649C839",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Capital Payment",
+      "Prohibition",
+      "Dispersal of Parties",
+      "Advance Payment"
+    ],
+    "description": "In a Salam contract, it is prohibited by Shari'ah for the contracting parties to disperse from the contracting session if there is any delay in the payment of the capital. The capital must be fully paid before or at the point of their dispersal.",
+    "validation_query_template": "Does the proposed Salam transaction ('{suggestion_text}'), specifically regarding the timing of capital payment for '{specific_aspect}', ensure that the contracting parties do not disperse from the contracting session before full capital payment is made by the buyer, as per the Shari'ah prohibition against such an occurrence?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-45A450AC",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Subject Matter",
+      "Specificity",
+      "Impermissibility",
+      "Gharar"
+    ],
+    "description": "It is impermissible to enter into a Salam contract if the subject matter (the goods to be delivered) is a specific, uniquely identified item, rather than goods described by specification.",
+    "validation_query_template": "For the proposed Salam transaction ('{suggestion_text}'), is the subject matter, specifically '{specific_aspect}', a uniquely identified and specific item? If so, evaluate if this characteristic renders the Salam contract impermissible under the rule prohibiting Salam for specific, identified things."
+  },
+  {
+    "rule_id": "SSRM1_SS10-312069D3",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Deferred Delivery",
+      "Contractual Conditions",
+      "Prohibited Source",
+      "Hadith"
+    ],
+    "description": "The rule, derived from a Hadith, permits Salam contracts where a specific price is paid for goods to be delivered after a specified period. However, it explicitly prohibits engaging in such contracts for 'the products of the kin of so and so'.",
+    "validation_query_template": "For the proposed Salam transaction ('{suggestion_text}') involving '{product_details}', does the '{specific_aspect}' (e.g., the supplier's identity or the origin of the goods) violate the explicit prohibition stated in this rule against transacting for 'the products of the kin of so and so'?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-032157DB",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Gharar",
+      "Delivery",
+      "Specificity",
+      "Contract"
+    ],
+    "description": "A Salam contract that specifies products must be sourced exclusively from a particular farm is impermissible if there's a risk that products from that specific farm may not be available at the time of delivery, as this introduces Gharar (uncertainty) into the contract.",
+    "validation_query_template": "For the proposed Salam contract ('{suggestion_text}') concerning '{product_details}', does the agreement stipulate that the goods must be sourced from a specific, named farm or a singular unique source, such that the unavailability of goods from this exact source at the delivery time would introduce Gharar (uncertainty) as per this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-182680D0",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Gharar",
+      "Subject-Matter",
+      "Availability",
+      "Delivery"
+    ],
+    "description": "The subject-matter of a Salam contract must be commonly available under normal circumstances at the time it is required for delivery. This requirement aims to remove uncertainty (Gharar) and ensure the seller's capability to deliver the goods on the specified date.",
+    "validation_query_template": "For the proposed Salam transaction ('{product_details}'), is the subject-matter, specifically '{specific_aspect}', reasonably expected to be commonly available under normal circumstances at the agreed delivery date, thereby mitigating Gharar and ensuring the seller's capacity to deliver as per this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-2C167C40",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Possession (Qabd)",
+      "Sale of Debts (Bay' al-Dayn)",
+      "Impermissibility",
+      "Subject-matter"
+    ],
+    "description": "It is impermissible to sell the subject-matter of a Salam contract before taking possession of it, as this action is considered a prohibited sale of debt (Bay' al-Dayn).",
+    "validation_query_template": "For the transaction '{suggestion_text}' involving the subject-matter of Salam ('{specific_aspect}'), is there any sale or disposal of this subject-matter before the seller has acquired possession? Determine if this action constitutes a prohibited 'sale of debt' according to this rule."
+  },
+  {
+    "rule_id": "SSRM1_SS10-D251668E",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Debt",
+      "Sale of Debt",
+      "Bay' al-Dayn",
+      "Permissibility",
+      "Prohibition"
+    ],
+    "description": "The sale of debts (Bay' al-Dayn) is not permissible under Shari'ah.",
+    "validation_query_template": "Does the proposed transaction ('{suggestion_text}') regarding '{specific_aspect}' involve the sale of an existing debt, which is impermissible as per this rule? Analyze based on the Shari'ah prohibition of Bay' al-Dayn (sale of debt)."
+  },
+  {
+    "rule_id": "SSRM1_SS10-A4BDE349",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Substitution",
+      "Market Value",
+      "Compound Profit",
+      "Impermissibility"
+    ],
+    "description": "It is impermissible to substitute the subject matter of a Salam contract with another commodity if the price of this substitute commodity is higher than the prevalent market value of the original Salam subject matter at the date of delivery. This rule aims to prevent the buyer from making a compound profit on a single deal.",
+    "validation_query_template": "Does the proposed substitution of the subject matter in the Salam contract ('{salam_contract_details}'), involving the substitute commodity ('{substitute_commodity_details}'), adhere to the condition that the substitute's price must not exceed the prevalent market value of the original subject matter at the delivery date? Analyze based on the rule's objective to deter the buyer from making a compound profit on one deal."
+  },
+  {
+    "rule_id": "SSRM1_SS10-8A8F13A3",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Iqalah",
+      "Salam",
+      "Permissibility",
+      "Contract Termination",
+      "Sunnah"
+    ],
+    "description": "The termination of a Salam contract by mutual agreement (Iqalah) is permissible. This permissibility stems from the general encouragement of Iqalah by the Prophet (peace be upon him), and Salam contracts are not an exception to this principle.",
+    "validation_query_template": "Regarding the proposed termination of the Salam contract detailed in '{suggestion_text}' or for the product '{product_details}', is this termination being effected through mutual agreement (Iqalah) between the contracting parties, in accordance with the Shari'ah principle that permits Iqalah in Salam based on prophetic encouragement?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-CCB3FBB0",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Iqalah",
+      "Permissibility",
+      "Contract Termination",
+      "Sunnah"
+    ],
+    "description": "The termination of a Salam contract by mutual agreement (Iqalah) is permissible. This permissibility is based on the Prophet's (peace be upon him) general encouragement of Iqalah, and Salam contracts are included within this concession.",
+    "validation_query_template": "Is the proposed termination ('{suggestion_text}') of the Salam contract concerning '{specific_aspect}' permissible as an Iqalah (termination by mutual agreement), given that the Prophet (PBUH) encouraged Iqalah generally and Salam is not an exception to this concession?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-17831C5C",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Sale",
+      "Iqalah",
+      "Contract",
+      "Permissibility"
+    ],
+    "description": "This rule establishes that Salam contracts can be terminated by mutual agreement (Iqalah). The basis for this permissibility is that Salam is a form of sale, and sale contracts generally allow for Iqalah.",
+    "validation_query_template": "Does the proposed termination ('{suggestion_text}') of the Salam contract ('{product_details}') concerning '{specific_aspect}' align with the permissibility of Iqalah (mutual termination), given that Salam, as a form of sale, admits such agreements according to this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-42701231",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Permissibility",
+      "Sale of Tangible Goods",
+      "Contract Withdrawal",
+      "Khiyar (Option to Rescind)",
+      "Contracting Parties' Needs"
+    ],
+    "description": "This rule states that the sale of tangible goods is permitted, and this permissibility acknowledges and considers the legitimate need of contracting parties to be able to manage regret and have an option to withdraw from the contract.",
+    "validation_query_template": "For the proposed transaction ('{suggestion_text}') involving the sale of tangible goods ('{product_details}'), does the contractual provision for '{specific_aspect}' adequately reflect the Shari'ah consideration that permits such sales by acknowledging the contracting parties' need to manage regret and potentially withdraw from the contract?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-41BDCE02",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Iqalah",
+      "Sale",
+      "Contractual Regret",
+      "Permissibility"
+    ],
+    "description": "The permissibility of Iqalah (mutual cancellation of a contract) is more readily applicable to Salam contracts. This is because Salam, being a low-cost form of sale, presents a greater possibility for parties to regret the transaction compared to sales of immediately exchangeable tangible goods, making Iqalah a suitable provision.",
+    "validation_query_template": "Does the proposed Salam transaction ('{suggestion_text}') or product ('{product_details}') acknowledge and provide for the enhanced applicability and permissibility of Iqalah (mutual cancellation) for '{specific_aspect}', considering the greater potential for contractual regret in Salam as stated by this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-3F62BF3A",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Penalty Clause",
+      "Debt",
+      "al-Muslam Fihi",
+      "Prohibition"
+    ],
+    "description": "Penalty clauses are not permitted in Salam contracts because the subject matter of Salam (al-Muslam Fihi) is considered a debt.",
+    "validation_query_template": "Does the proposed Salam transaction ('{product_details}') incorporate any penalty clauses for '{specific_aspect, e.g., delay in delivery of al-Muslam Fihi}'? Verify if this aligns with the Shari'ah prohibition on penalty clauses in Salam, which arises because al-Muslam Fihi is considered a debt."
+  },
+  {
+    "rule_id": "SSRM1_SS10-E4141527",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Riba",
+      "Debt",
+      "Prohibition",
+      "Principal Amount",
+      "Excess Payment"
+    ],
+    "description": "It is not permitted to stipulate any payment that exceeds the principal amount of a debt.",
+    "validation_query_template": "Does the proposed transaction or product ('{suggestion_text}' or '{product_details}'), specifically concerning '{specific_aspect}', involve any stipulation for payments exceeding the principal amount of a debt? Analyze if this constitutes prohibited Riba (interest on debt) as per this rule."
+  },
+  {
+    "rule_id": "SSRM1_SS10-6CFBAEAB",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Parallel Salam",
+      "Salam",
+      "Permissibility",
+      "Separable Contracts",
+      "Contractual Independence"
+    ],
+    "description": "The permissibility of Parallel Salam is based on the principle that it involves two distinct Salam contracts that are separable from each other. This separability must be maintained even if the descriptions of the subject matter in the two contracts are similar.",
+    "validation_query_template": "Does the proposed Parallel Salam arrangement ('{suggestion_text}'), specifically concerning the terms linking the two underlying Salam agreements ('{specific_aspect}'), ensure that these two agreements are genuinely distinct and separable, thereby upholding the basis for its permissibility, irrespective of any similarity in their subject-matter descriptions?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-87C44A90",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Bay'atayn fi Bay'ah",
+      "Prohibition",
+      "Contractual Ambiguity",
+      "Contingent Sales",
+      "Inseparability"
+    ],
+    "description": "The Shari'ah rule prohibiting 'two sales in one' (Bay'atayn fi Bay'ah). This refers to a single contract that encompasses two distinct sales which are contingent upon each other or are otherwise inseparably linked, rendering the arrangement impermissible.",
+    "validation_query_template": "Does the proposed transaction ('{suggestion_text}') or financial product ('{product_details}'), particularly concerning '{specific_aspect}', involve a structure that could be classified as 'two sales in one' (Bay'atayn fi Bay'ah)? Specifically, are two distinct sales made contingent upon each other or inseparably linked within a single contract, thereby violating this prohibition?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-B7A3CD14",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Sale of Debt",
+      "Prohibition",
+      "Sukuk",
+      "Trading",
+      "Debt"
+    ],
+    "description": "Trading in Sukuk is prohibited if such trading constitutes a sale of debt.",
+    "validation_query_template": "Does the proposed trading of the Sukuk ('{product_details}') constitute a sale of debt, thereby rendering it prohibited under this rule? Analyze '{specific_aspect}' of the Sukuk's structure and underlying assets to determine if its trading equates to selling debt."
+  },
+  {
+    "rule_id": "SSRM1_SS10-306F8D2D",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Debt",
+      "Sale",
+      "Prohibition",
+      "Bay al-Dayn",
+      "Contract"
+    ],
+    "description": "The sale of debt (Bay al-Dayn) is a prohibited transaction under Shari'ah.",
+    "validation_query_template": "Does the proposed transaction ('{suggestion_text}') or financial product ('{product_details}'), specifically concerning '{specific_aspect}', involve any arrangement that constitutes a sale of debt (Bay al-Dayn), which is prohibited according to this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-ED181FFA",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Deferred Delivery",
+      "Immediate Payment",
+      "Commodity",
+      "Forward Sale"
+    ],
+    "description": "A Salam transaction is the purchase of a commodity for deferred delivery in exchange for immediate payment.",
+    "validation_query_template": "Does the transaction ('{suggestion_text}') for '{product_details}' adhere to the definition of Salam by ensuring '{specific_aspect_payment}' is immediate and '{specific_aspect_delivery}' of the commodity is deferred, as per this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-99804412",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Deferred Delivery",
+      "Advance Payment",
+      "Sale Contract",
+      "Al-Muslam Fihi"
+    ],
+    "description": "A Salam transaction is defined as a sale where the full price, termed Salam capital, is paid by the buyer at the time of contracting, while the delivery of the subject matter, known as al-Muslam Fihi, is postponed to a specified future date.",
+    "validation_query_template": "Does the proposed transaction ('{suggestion_text}') for the sale of '{product_details}' comply with the definition of a Salam contract by ensuring that the price (Salam capital) is paid in full at the time of contracting, and the delivery of the item (al-Muslam Fihi) is deferred to a future date, as detailed in '{specific_aspect_contract_terms}'?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-662B80E7",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Salam",
+      "Parallel Salam",
+      "Contractual Independence",
+      "Non-contingency",
+      "Permissibility"
+    ],
+    "description": "An institution is permitted to engage in Parallel Salam. This involves the institution first acting as a buyer in a Salam contract for a specified commodity (e.g., cotton). Subsequently, the institution, which was the buyer in the first contract, enters into a new, separate Salam contract as a seller to provide a third party (e.g., textile mills) with a commodity of similar specifications. A critical Shari'ah condition for this structure is that the execution of this second Salam contract must be entirely independent and not contingent upon the execution or fulfillment of the first Salam contract.",
+    "validation_query_template": "Does the proposed Parallel Salam transaction ('{suggestion_text}'), specifically regarding the linkage between the initial Salam purchase and the subsequent Salam sale ('{specific_aspect}'), ensure that the execution of the second Salam contract is not contingent on the execution of the first, thereby maintaining contractual independence as required by this rule?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-A64EF64E",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Iqalah",
+      "Contract Cancellation",
+      "Bilateral Agreement",
+      "Mutual Consent",
+      "Legal Effect of Contract"
+    ],
+    "description": "Iqalah (contract cancellation) is a bilateral agreement where the contracting parties mutually consent to abate (i.e., reduce or nullify) and remove the legal effect of their contract.",
+    "validation_query_template": "For the proposed action ('{suggestion_text}') concerning the contract related to '{specific_aspect}', does this action constitute a valid Iqalah? Specifically, is it a bilateral agreement between all original contracting parties to mutually consent to abate and remove the legal effect of the said contract?"
+  },
+  {
+    "rule_id": "SSRM1_SS10-3F394867",
+    "standard_ref": "Shariah Standard ss_10_salam_and_parallel_salam",
+    "principle_keywords": [
+      "Fungibles",
+      "Mithliyyat",
+      "Interchangeability",
+      "Guarantee",
+      "Salam Contract"
+    ],
+    "description": "Fungible items (Mithlis) are defined as those that are mutually interchangeable, meaning their individual units possess identical specifications. In the event of destruction, these items are guaranteed by other identical units, without consideration to their specific value.",
+    "validation_query_template": "Does the item '{item_description}' in the transaction '{transaction_details}' meet the criteria of a fungible (Mithli) item, specifically: are its units mutually interchangeable with identical specifications, and would it be guaranteed by other identical units if destructed, irrespective of their individual value?"
   }
 ]
