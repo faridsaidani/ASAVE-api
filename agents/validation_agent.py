@@ -119,7 +119,20 @@ class ValidationAgent(BaseAgent):
             
         logger.info(f"Total {rules_loaded_count} rules prepared for batch validation prompt.")
         return "\n---\n".join(all_rules_text_parts)
-
+    def _sanitize_prompt_template(self, text: str) -> str:
+        """
+        Sanitizes text for use in prompt templates by escaping 
+        problematic characters:
+        - % symbols (which cause formatting errors with string templates)
+        - {} curly braces (for f-string safety)
+        """
+        if not text:
+            return ""
+        # First escape any % symbols (to avoid conversion specifier errors)
+        text = text.replace("%", "%%")
+        # Then escape curly braces (for f-string safety)
+        text = text.replace("{", "{{").replace("}", "}}")
+        return text
     def validate_shariah_compliance_batched(self, # New method name
                                             proposed_suggestion_object: Dict[str, Any],
                                             shariah_rules_explicit_path: str,
@@ -238,17 +251,24 @@ class ValidationAgent(BaseAgent):
                 relevant_ss_docs = retriever.get_relevant_documents(semantic_query)
 
                 if relevant_ss_docs:
-                    ss_context_str = "\n\n---\n\n".join([f"SS Excerpt (Source: {doc.metadata.get('source', 'Unknown')}, Page {doc.metadata.get('page', 'N/A')}):\n{doc.page_content}" for doc in relevant_ss_docs])
-                    report["semantic_validation_against_ss"]["relevant_ss_excerpts_summary"] = f"Retrieved {len(relevant_ss_docs)} excerpts. First one: {relevant_ss_docs[0].page_content[:200]}..." if relevant_ss_docs else "None"
+                    ss_context_str = "\n\n---\n\n".join([
+                        f"SS Excerpt (Source: {doc.metadata.get('source', 'Unknown')}, Page {doc.metadata.get('page', 'N/A')}):\n{self._sanitize_prompt_template(doc.page_content)}" 
+                        for doc in relevant_ss_docs
+                    ])
+                    report["semantic_validation_against_ss"]["relevant_ss_excerpts_summary"] = f"Retrieved {len(relevant_ss_docs)} excerpts. First one: {self._sanitize_prompt_template(relevant_ss_docs[0].page_content[:200])}..." if relevant_ss_docs else "None"
+                    
+                    # Sanitize all text components before using in prompt
+                    sanitized_suggestion_text = self._sanitize_prompt_template(suggestion_text)
+                    sanitized_aisga_notes = self._sanitize_prompt_template(aisga_shariah_notes)
                     
                     semantic_eval_prompt = f"""
                     Proposed Text:
                     ---
-                    {suggestion_text}
+                    {sanitized_suggestion_text}
                     ---
                     Original Shari'ah Notes for this "Proposed Text" (for context, from the agent that generated it):
                     ---
-                    {aisga_shariah_notes}
+                    {sanitized_aisga_notes}
                     ---
                     Relevant Excerpts from Shari'ah Standards (SS) for general context:
                     ---
