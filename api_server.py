@@ -27,7 +27,6 @@ from agents.conciseness_agent import ConcisenessAgent
 from agents.validation_agent import ValidationAgent
 from agents.shariah_rule_miner_agent import ShariahRuleMinerAgent
 from agents.text_reformatter_agent import TextReformatterAgent # <-- NEW IMPORT
-from agents.contextual_update_agent import ContextualUpdateAgent 
 
 from marker.converters.pdf import PdfConverter
 from marker.models import create_model_dict
@@ -77,7 +76,6 @@ asave_context = {
     "text_reformatter_marker" : None,
     "current_session_id": None, # Name or ID of the currently loaded session
     "initialized_with_session": False, # Tracks if current init is from a saved session
-    "cua_agent": None,
 }
 
 def allowed_file(filename):
@@ -392,17 +390,6 @@ def initialize_asave():
         asave_context["specialized_agents"]["conciseness_agent"] = ConcisenessAgent()
         logger.info("Initialized specialized agents")
         
-        try:
-            asave_context["cua_agent"] = ContextualUpdateAgent()
-            logger.info("Initialized ContextualUpdateAgent (CUA)")
-        except ValueError as ve_cua: # Catch API key issues if not caught by BaseAgent earlier
-            logger.error(f"Failed to initialize ContextualUpdateAgent: {ve_cua}")
-            # Decide if this is critical for overall initialization or just a warning
-            # For now, let's assume it's not critical for the system to be "initialized"
-            # but CUA-dependent endpoints won't work.
-        except Exception as e_cua_init:
-            logger.error(f"Exception initializing ContextualUpdateAgent: {e_cua_init}", exc_info=True)
-
         # Initialize Marker and TextReformatter for PDF extraction
         raw_config = {
             "output_format": "markdown",
@@ -599,8 +586,7 @@ def get_status_api():
             "scva_iscca": bool(asave_context["scva_iscca"]),
             "srma": bool(asave_context["srma"]),
             "text_reformatter_agent": bool(asave_context["text_reformatter_agent"]),
-            "text_reformatter_marker": bool(asave_context["text_reformatter_marker"]),
-            "cua_agent": bool(asave_context.get("cua_agent")),
+            "text_reformatter_marker": bool(asave_context["text_reformatter_marker"])
         }
     })
 
@@ -1693,98 +1679,6 @@ def get_active_document_content_api_db(session_id: str, document_id: str): # doc
         return jsonify({"status": "error", "message": f"Error fetching active content: {str(e)}"}), 500
     finally:
         if conn: conn.close()
-
-@app.route('/contextual_update/analyze', methods=['POST'])
-def analyze_contextual_update_api():
-    global asave_context
-    logger.info("Received /contextual_update/analyze request.")
-
-    if not asave_context.get("initialized") or not asave_context.get("current_session_id"):
-        return jsonify({"status": "error", "message": "ASAVE system or session not initialized."}), 400
-    
-    cua: ContextualUpdateAgent = asave_context.get("cua_agent")
-    if not cua:
-        return jsonify({"status": "error", "message": "ContextualUpdateAgent not available."}), 503
-
-    try:
-        data = request.get_json()
-        if not data:
-            return jsonify({"status": "error", "message": "Invalid JSON payload."}), 400
-
-        new_context_text = data.get("new_context_text")
-        target_document_id = data.get("target_document_id") # e.g., "FAS-17.pdf" or the ID used in versioning
-
-        if not new_context_text or not target_document_id:
-            return jsonify({"status": "error", "message": "Missing 'new_context_text' or 'target_document_id'."}), 400
-
-        # --- Fetch current content of the target_document_id for the active session ---
-        # This uses your existing document versioning logic to get the active/latest content.
-        active_session_id = asave_context["current_session_id"]
-        
-        # Using get_active_document_content_api_db logic (simplified for direct call)
-        # You might want to refactor this into a reusable function if not already.
-        fas_document_content = ""
-        conn = None
-        try:
-            conn = get_db_connection() # from your api_server
-            cursor = conn.cursor()
-            # Try to get from current_version_fk first
-            cursor.execute("""
-                SELECT dv.content_filepath
-                FROM documents d
-                JOIN document_versions dv ON d.current_version_fk = dv.version_pkid
-                WHERE d.session_id = ? AND d.original_document_id = ?
-            """, (active_session_id, target_document_id))
-            row = cursor.fetchone()
-
-            if row and row["content_filepath"]:
-                md_file_path_absolute = os.path.join(SESSIONS_DB_PATH, active_session_id, row["content_filepath"])
-                if os.path.exists(md_file_path_absolute):
-                    with open(md_file_path_absolute, "r", encoding="utf-8") as f:
-                        fas_document_content = f.read()
-                else:
-                    logger.warning(f"CUA: Active version file missing for {target_document_id} in session {active_session_id} at {md_file_path_absolute}. Checking legacy active_docs.")
-            
-            if not fas_document_content: # Fallback to legacy active_docs path if current_version_fk method failed
-                active_doc_legacy_path = get_active_document_path(active_session_id, target_document_id) # from your api_server
-                if os.path.exists(active_doc_legacy_path):
-                    with open(active_doc_legacy_path, "r", encoding="utf-8") as f_legacy:
-                        fas_document_content = f_legacy.read()
-                        logger.info(f"CUA: Loaded content for {target_document_id} from legacy active_docs path.")
-            
-            if not fas_document_content:
-                logger.error(f"CUA: Could not retrieve content for FAS document '{target_document_id}' in session '{active_session_id}'.")
-                return jsonify({"status": "error", "message": f"Could not retrieve content for target FAS document '{target_document_id}'."}), 404
-
-        except sqlite3.Error as e_sql_cua:
-            logger.error(f"CUA: SQLite error retrieving document content: {e_sql_cua}", exc_info=True)
-            return jsonify({"status": "error", "message": "Database error retrieving document content."}), 500
-        finally:
-            if conn: conn.close()
-        
-        # --- Invoke the CUA agent ---
-        # This is a synchronous call as CUA's primary output is an analysis report.
-        # For very long processing, you could make it async, but then the frontend
-        # would need to poll or use a different SSE stream for CUA's results.
-        
-        # Running CUA in executor to prevent blocking main Flask thread for too long if LLM call is slow
-        future_cua = executor.submit(
-            cua.analyze_impact,
-            new_context_text=new_context_text,
-            fas_document_content=fas_document_content,
-            fas_document_id=target_document_id
-        )
-        analysis_result = future_cua.result() # Wait for CUA to finish
-
-        if "error" in analysis_result:
-            return jsonify({"status": "error", "message": analysis_result["error"], "details": analysis_result}), 500
-
-        return jsonify({"status": "success", "analysis": analysis_result}), 200
-
-    except Exception as e:
-        logger.error(f"Error during contextual update analysis: {e}", exc_info=True)
-        return jsonify({"status": "error", "message": f"General error: {str(e)}"}), 500
-
 if __name__ == '__main__':
     print("Starting ASAVE API server...")
     # Initialize the database and other components
