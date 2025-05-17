@@ -9,6 +9,16 @@ import fitz
 from flask import Flask, request, jsonify, Response, stream_with_context
 from werkzeug.utils import secure_filename
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import datetime
+import sqlite3
+import datetime
+import os
+import shutil
+import json
+import logging
+import hashlib
+
+
 
 # ASAVE Core Components
 from utils.document_processor import DocumentProcessor
@@ -32,10 +42,14 @@ app.config['ALLOWED_EXTENSIONS'] = {'pdf', 'json'}
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 CONFIGURED_PDF_LIBRARY_PATH = os.path.join(app.root_path, 'pdf_library') 
 os.makedirs(CONFIGURED_PDF_LIBRARY_PATH, exist_ok=True) # Ensure it exists
+DOCUMENT_VERSIONS_DIR_NAME = "doc_versions" # Subdirectory within a session for document versions
+
 
 # Directory to save session-specific vector databases
 SESSIONS_DB_PATH = os.path.join(app.root_path, 'asave_sessions_db')
 os.makedirs(SESSIONS_DB_PATH, exist_ok=True)
+DATABASE_NAME = "asave_document_versions.db"
+DATABASE_PATH = os.path.join(app.root_path, DATABASE_NAME) # Store DB at app root or SESSIONS_DB_PATH
 
 
 logging.basicConfig(level=logging.INFO,
@@ -87,6 +101,93 @@ def process_suggestion_task(agent_instance, method_name, variant_name_override=N
     except Exception as e:
         logger.error(f"Exception in agent {type(agent_instance).__name__} ({actual_variant_name}) calling {method_name}: {e}", exc_info=True)
         return {"error": str(e), "agent_type": type(agent_instance).__name__, "variant_name": actual_variant_name}
+def get_document_version_path(session_id: str, document_id: str) -> str:
+    """Constructs the base path for storing versions of a specific document within a session."""
+    # Sanitize document_id to be a safe directory name
+    safe_document_id = secure_filename(document_id.replace('.pdf', '').replace('.md', ''))
+    if not safe_document_id: # Handle empty or weird document IDs
+        safe_document_id = "untitled_document"
+    path = os.path.join(SESSIONS_DB_PATH, session_id, DOCUMENT_VERSIONS_DIR_NAME, safe_document_id)
+    os.makedirs(path, exist_ok=True) # Ensure directory exists
+    return path
+
+def get_active_document_path(session_id: str, document_id: str) -> str:
+    """Path to where the current active version of the Markdown is stored."""
+    # This could be a specific file, or you might decide the latest version IS the active one.
+    # For simplicity, let's assume the main Markdown content the user edits is stored directly
+    # in the session, and versions are copies. Or, the "active" is just a pointer to latest version.
+    # Let's make it a distinct file for the current editable content.
+    safe_document_id = secure_filename(document_id.replace('.pdf', '').replace('.md', ''))
+    if not safe_document_id: safe_document_id = "untitled_document"
+    active_doc_dir = os.path.join(SESSIONS_DB_PATH, session_id, "active_docs")
+    os.makedirs(active_doc_dir, exist_ok=True)
+    return os.path.join(active_doc_dir, f"{safe_document_id}.md")
+
+def get_current_timestamp_str() -> str:
+    return datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f") # Microsecond precision for uniqueness
+
+def get_db_connection():
+    conn = sqlite3.connect(DATABASE_PATH)
+    conn.row_factory = sqlite3.Row # Access columns by name
+    return conn
+
+def initialize_database():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    # Documents Table: Tracks unique documents within sessions
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS documents (
+            doc_pkid INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id TEXT NOT NULL,
+            original_document_id TEXT NOT NULL, -- User-facing ID, e.g., PDF filename
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            current_version_fk INTEGER, -- Points to the version_pkid of the active version
+            notes TEXT,
+            UNIQUE(session_id, original_document_id),
+            FOREIGN KEY (current_version_fk) REFERENCES document_versions(version_pkid) ON DELETE SET NULL
+        )
+    ''')
+    # Document Versions Table: Tracks each version of a document's content
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS document_versions (
+            version_pkid INTEGER PRIMARY KEY AUTOINCREMENT,
+            doc_fk INTEGER NOT NULL,
+            version_timestamp_id TEXT NOT NULL UNIQUE, -- e.g., YYYYMMDD_HHMMSS_ffffff
+            content_filepath TEXT NOT NULL,          -- Relative path to the .md file in session's version dir
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            change_summary TEXT,
+            content_hash TEXT, -- MD5 or SHA256 hash of the content
+            parent_version_fk INTEGER, -- Points to the previous version_pkid (for lineage)
+            FOREIGN KEY (doc_fk) REFERENCES documents(doc_pkid) ON DELETE CASCADE,
+            FOREIGN KEY (parent_version_fk) REFERENCES document_versions(version_pkid) ON DELETE SET NULL 
+        )
+    ''')
+    # Index for faster lookups
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_doc_fk_created_at ON document_versions (doc_fk, created_at DESC)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_doc_session_original_id ON documents (session_id, original_document_id)")
+
+    conn.commit()
+    conn.close()
+    logger.info(f"Database '{DATABASE_NAME}' initialized/checked at {DATABASE_PATH}")
+
+def get_or_create_document_record(conn: sqlite3.Connection, session_id: str, original_document_id: str) -> int:
+    """Gets the PKID of a document record, creating it if it doesn't exist."""
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT doc_pkid FROM documents WHERE session_id = ? AND original_document_id = ?",
+        (session_id, original_document_id)
+    )
+    row = cursor.fetchone()
+    if row:
+        return row["doc_pkid"]
+    else:
+        cursor.execute(
+            "INSERT INTO documents (session_id, original_document_id) VALUES (?, ?)",
+            (session_id, original_document_id)
+        )
+        conn.commit()
+        logger.info(f"Created new document record for session '{session_id}', doc '{original_document_id}', PKID: {cursor.lastrowid}")
+        return cursor.lastrowid # type: ignore
 
 # --- Non-Streaming (Standard JSON) API Endpoints ---
 
@@ -1252,7 +1353,338 @@ def list_library_pdfs_api():
         logger.error(f"Error listing library PDFs: {e}", exc_info=True)
         return jsonify({"status": "error", "message": f"Failed to list library PDFs: {str(e)}"}), 500
 
+@app.route('/document/<session_id>/<path:document_id>/save_version', methods=['POST'])
+def save_document_version_api_db(session_id: str, document_id: str): # document_id can now contain slashes if it's a path
+    logger.info(f"Received /save_version (DB) for session '{session_id}', doc '{document_id}'")
+    session_id = secure_filename(session_id) # Basic sanitization
+    # document_id is kept as is, as it might represent a path/name from library
+
+    if not asave_context.get("initialized") or asave_context.get("current_session_id") != session_id:
+        return jsonify({"status": "error", "message": f"Session '{session_id}' not active or initialized."}), 400
+
+    data = request.get_json()
+    if not data or "markdown_content" not in data:
+        return jsonify({"status": "error", "message": "Missing 'markdown_content'."}), 400
+
+    markdown_content = data["markdown_content"]
+    change_summary = data.get("change_summary", "Version saved via API")
+    parent_version_id_timestamp = data.get("parent_version_timestamp_id") # Optional: client can specify parent
+
+    conn = None
+    try:
+        conn = get_db_connection()
+        doc_pkid = get_or_create_document_record(conn, session_id, document_id)
+
+        # Determine parent_version_fk if parent_version_id_timestamp is provided
+        parent_version_fk = None
+        if parent_version_id_timestamp:
+            cursor_parent = conn.cursor()
+            cursor_parent.execute(
+                "SELECT version_pkid FROM document_versions WHERE doc_fk = ? AND version_timestamp_id = ?",
+                (doc_pkid, parent_version_id_timestamp)
+            )
+            parent_row = cursor_parent.fetchone()
+            if parent_row:
+                parent_version_fk = parent_row["version_pkid"]
+            else:
+                logger.warning(f"Parent version timestamp ID '{parent_version_id_timestamp}' not found for doc_pkid {doc_pkid}. Saving without explicit parent link.")
+
+
+        # 1. Save Markdown content to filesystem
+        version_storage_base_path = get_document_version_path(session_id, document_id) # e.g., .../sessions/sid/doc_versions/docid/
+        version_timestamp_id_str = get_current_timestamp_str()
+        version_filename_md = f"version_{version_timestamp_id_str}.md"
+        version_filepath_md_absolute = os.path.join(version_storage_base_path, version_filename_md)
+        
+        with open(version_filepath_md_absolute, "w", encoding="utf-8") as f:
+            f.write(markdown_content)
+        logger.info(f"Markdown content saved to: {version_filepath_md_absolute}")
+
+        # Relative path for DB storage (relative to SESSIONS_DB_PATH/session_id)
+        # This makes the SESSIONS_DB_PATH potentially movable.
+        sanitized_doc_id_for_path = secure_filename(document_id.replace('.pdf', '').replace('.md', '')) or "untitled_document"
+        content_filepath_relative = os.path.join(DOCUMENT_VERSIONS_DIR_NAME, sanitized_doc_id_for_path, version_filename_md)
+        content_hash_val = hashlib.md5(markdown_content.encode('utf-8')).hexdigest()
+
+        # 2. Save version metadata to SQLite
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO document_versions 
+                (doc_fk, version_timestamp_id, content_filepath, change_summary, content_hash, parent_version_fk)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (doc_pkid, version_timestamp_id_str, content_filepath_relative, change_summary, content_hash_val, parent_version_fk))
+        new_version_pkid = cursor.lastrowid
+
+        # 3. Update the document record to point to this new version as the current one
+        cursor.execute("UPDATE documents SET current_version_fk = ? WHERE doc_pkid = ?", (new_version_pkid, doc_pkid))
+        conn.commit()
+        
+        # 4. Update the "active" document file (working copy)
+        active_doc_file_path = get_active_document_path(session_id, document_id)
+        shutil.copy2(version_filepath_md_absolute, active_doc_file_path)
+        logger.info(f"Active document updated: {active_doc_file_path}")
+
+
+        logger.info(f"New version {version_timestamp_id_str} (PKID: {new_version_pkid}) saved for doc_pkid {doc_pkid}")
+        return jsonify({
+            "status": "success", "message": "Document version saved successfully.",
+            "version_id": version_timestamp_id_str, # User-friendly ID
+            "version_pkid": new_version_pkid,     # Internal DB ID
+            "document_pkid": doc_pkid
+        }), 201
+
+    except sqlite3.Error as e_sql:
+        logger.error(f"SQLite error saving version: {e_sql}", exc_info=True)
+        if conn: conn.rollback()
+        return jsonify({"status": "error", "message": f"Database error: {str(e_sql)}"}), 500
+    except Exception as e:
+        logger.error(f"Error saving version: {e}", exc_info=True)
+        if conn: conn.rollback()
+        return jsonify({"status": "error", "message": f"Failed to save version: {str(e)}"}), 500
+    finally:
+        if conn: conn.close()
+
+
+@app.route('/document/<session_id>/<path:document_id>/versions', methods=['GET'])
+def get_document_versions_api_db(session_id: str, document_id: str):
+    logger.info(f"Received /versions (DB) for session '{session_id}', doc '{document_id}'")
+    session_id = secure_filename(session_id)
+    # document_id is kept as is
+
+    conn = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        # Get doc_pkid first
+        cursor.execute(
+            "SELECT doc_pkid FROM documents WHERE session_id = ? AND original_document_id = ?",
+            (session_id, document_id)
+        )
+        doc_row = cursor.fetchone()
+        if not doc_row:
+            return jsonify({"status": "success", "document_id": document_id, "versions": [], "message": "Document not found in this session."}), 200 # Or 404 if preferred
+
+        doc_pkid = doc_row["doc_pkid"]
+        cursor.execute("""
+            SELECT version_timestamp_id, created_at, change_summary, content_filepath
+            FROM document_versions 
+            WHERE doc_fk = ? 
+            ORDER BY created_at DESC
+        """, (doc_pkid,))
+        
+        versions_data = []
+        for row in cursor.fetchall():
+            versions_data.append({
+                "version_id": row["version_timestamp_id"],
+                "timestamp": row["created_at"],
+                "summary": row["change_summary"],
+                "content_filepath_relative": row["content_filepath"] # For debug or direct access if needed
+            })
+        return jsonify({"status": "success", "document_id": document_id, "doc_pkid": doc_pkid, "versions": versions_data}), 200
+    except sqlite3.Error as e_sql:
+        logger.error(f"SQLite error listing versions: {e_sql}", exc_info=True)
+        return jsonify({"status": "error", "message": f"Database error: {str(e_sql)}"}), 500
+    except Exception as e:
+        logger.error(f"Error listing versions: {e}", exc_info=True)
+        return jsonify({"status": "error", "message": f"Failed to list versions: {str(e)}"}), 500
+    finally:
+        if conn: conn.close()
+
+
+@app.route('/document/<session_id>/<path:document_id>/versions/<version_timestamp_id>', methods=['GET'])
+def get_document_version_content_api_db(session_id: str, document_id: str, version_timestamp_id: str):
+    logger.info(f"Received /versions/{version_timestamp_id} (DB) for session '{session_id}', doc '{document_id}'")
+    session_id = secure_filename(session_id)
+    version_timestamp_id = secure_filename(version_timestamp_id) # It's a timestamp string
+
+    conn = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT dv.content_filepath, dv.change_summary, dv.created_at, d.original_document_id
+            FROM document_versions dv
+            JOIN documents d ON dv.doc_fk = d.doc_pkid
+            WHERE d.session_id = ? AND d.original_document_id = ? AND dv.version_timestamp_id = ?
+        """, (session_id, document_id, version_timestamp_id))
+        
+        row = cursor.fetchone()
+        if row:
+            # Construct absolute path to the MD file using SESSIONS_DB_PATH and session_id
+            # content_filepath from DB is relative to SESSIONS_DB_PATH/session_id
+            md_file_path_absolute = os.path.join(SESSIONS_DB_PATH, session_id, row["content_filepath"])
+            if os.path.exists(md_file_path_absolute):
+                with open(md_file_path_absolute, "r", encoding="utf-8") as f:
+                    content = f.read()
+                return jsonify({
+                    "status": "success", "version_id": version_timestamp_id, "document_id": document_id,
+                    "markdown_content": content,
+                    "metadata": {"summary": row["change_summary"], "timestamp": row["created_at"]}
+                }), 200
+            else:
+                logger.error(f"Markdown file not found at path from DB: {md_file_path_absolute}")
+                return jsonify({"status": "error", "message": "Version content file missing on server."}), 404
+        else:
+            return jsonify({"status": "error", "message": "Version not found."}), 404
+    except sqlite3.Error as e_sql: # ...
+        return jsonify({"status": "error", "message": f"Database error: {str(e_sql)}"}), 500
+    except Exception as e: # ...
+        return jsonify({"status": "error", "message": f"Failed to get version content: {str(e)}"}), 500
+    finally:
+        if conn: conn.close()
+
+
+@app.route('/document/<session_id>/<path:document_id>/revert_to_version', methods=['POST'])
+def revert_to_version_api_db(session_id: str, document_id: str):
+    logger.info(f"Received /revert_to_version (DB) for session '{session_id}', doc '{document_id}'")
+    session_id = secure_filename(session_id)
+
+    if not asave_context.get("initialized") or asave_context.get("current_session_id") != session_id:
+         return jsonify({"status": "error", "message": f"Session '{session_id}' not active."}), 400
+
+    data = request.get_json()
+    if not data or "version_id_to_revert_to" not in data: # Match frontend key
+        return jsonify({"status": "error", "message": "Missing 'version_id_to_revert_to'."}), 400
+    
+    target_version_timestamp_id = secure_filename(data["version_id_to_revert_to"])
+    conn = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Get doc_pkid and target version info
+        cursor.execute("""
+            SELECT dv.version_pkid, dv.content_filepath, d.doc_pkid
+            FROM document_versions dv
+            JOIN documents d ON dv.doc_fk = d.doc_pkid
+            WHERE d.session_id = ? AND d.original_document_id = ? AND dv.version_timestamp_id = ?
+        """, (session_id, document_id, target_version_timestamp_id))
+        target_version_row = cursor.fetchone()
+
+        if not target_version_row:
+            return jsonify({"status": "error", "message": f"Target version '{target_version_timestamp_id}' not found."}), 404
+        
+        target_version_pkid = target_version_row["version_pkid"]
+        target_content_filepath_relative = target_version_row["content_filepath"]
+        doc_pkid = target_version_row["doc_pkid"]
+
+        # 1. Read current active content (if any) to save it as a new version before reverting
+        active_doc_file_path = get_active_document_path(session_id, document_id)
+        current_active_content_for_backup = ""
+        if os.path.exists(active_doc_file_path):
+            with open(active_doc_file_path, "r", encoding="utf-8") as f_current:
+                current_active_content_for_backup = f_current.read()
+        
+        # Save this current content as a new version (acts as a backup)
+        backup_version_timestamp_id = get_current_timestamp_str()
+        backup_filename_md = f"version_{backup_version_timestamp_id}.md"
+        version_storage_base_path = get_document_version_path(session_id, document_id) # Base for version files
+        backup_filepath_md_absolute = os.path.join(version_storage_base_path, backup_filename_md)
+        
+        with open(backup_filepath_md_absolute, "w", encoding="utf-8") as f_backup:
+            f_backup.write(current_active_content_for_backup)
+        
+        sanitized_doc_id_for_path = secure_filename(document_id.replace('.pdf', '').replace('.md', '')) or "untitled_document"
+        backup_content_filepath_relative = os.path.join(DOCUMENT_VERSIONS_DIR_NAME, sanitized_doc_id_for_path, backup_filename_md)
+        backup_content_hash = hashlib.md5(current_active_content_for_backup.encode('utf-8')).hexdigest()
+
+        # Get the current_version_fk to use as parent for this backup version
+        cursor.execute("SELECT current_version_fk FROM documents WHERE doc_pkid = ?", (doc_pkid,))
+        current_version_fk_row = cursor.fetchone()
+        parent_for_backup_fk = current_version_fk_row["current_version_fk"] if current_version_fk_row else None
+
+        cursor.execute("""
+            INSERT INTO document_versions (doc_fk, version_timestamp_id, content_filepath, change_summary, content_hash, parent_version_fk)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (doc_pkid, backup_version_timestamp_id, backup_content_filepath_relative, 
+              f"Auto-save before reverting to version {target_version_timestamp_id}", backup_content_hash, parent_for_backup_fk))
+        # We don't set this backup as current_version_fk for the document
+
+        # 2. Update document's current_version_fk to the target version's PKID
+        cursor.execute("UPDATE documents SET current_version_fk = ? WHERE doc_pkid = ?", (target_version_pkid, doc_pkid))
+
+        # 3. Copy the target version's content to the active document file
+        target_md_file_path_absolute = os.path.join(SESSIONS_DB_PATH, session_id, target_content_filepath_relative)
+        if os.path.exists(target_md_file_path_absolute):
+            shutil.copy2(target_md_file_path_absolute, active_doc_file_path)
+            with open(active_doc_file_path, "r", encoding="utf-8") as f_reverted:
+                reverted_content_for_response = f_reverted.read()
+            conn.commit()
+            logger.info(f"Reverted doc '{document_id}' to version '{target_version_timestamp_id}'.")
+            return jsonify({
+                "status": "success", "message": "Reverted to version successfully.",
+                "reverted_markdown_content": reverted_content_for_response,
+                "reverted_to_version_id": target_version_timestamp_id
+            }), 200
+        else:
+            conn.rollback() # Important: rollback if content file is missing
+            logger.error(f"Content file for target version not found: {target_md_file_path_absolute}")
+            return jsonify({"status": "error", "message": "Target version content file missing on server."}), 500
+
+    except sqlite3.Error as e_sql: # ...
+        if conn: conn.rollback()
+        return jsonify({"status": "error", "message": f"Database error: {str(e_sql)}"}), 500
+    except Exception as e: # ...
+        if conn: conn.rollback()
+        return jsonify({"status": "error", "message": f"Failed to revert version: {str(e)}"}), 500
+    finally:
+        if conn: conn.close()
+
+
+@app.route('/document/<session_id>/<path:document_id>/active_content', methods=['GET'])
+
+def get_active_document_content_api_db(session_id: str, document_id: str): # document_id can be path-like
+    logger.info(f"Received /active_content (DB) for session '{session_id}', doc '{document_id}'")
+    session_id = secure_filename(session_id)
+    conn = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        # Find the document and its current version
+        cursor.execute("""
+            SELECT dv.content_filepath, dv.version_timestamp_id, dv.change_summary, dv.created_at
+            FROM documents d
+            JOIN document_versions dv ON d.current_version_fk = dv.version_pkid
+            WHERE d.session_id = ? AND d.original_document_id = ?
+        """, (session_id, document_id))
+        row = cursor.fetchone()
+
+        if row:
+            md_file_path_absolute = os.path.join(SESSIONS_DB_PATH, session_id, row["content_filepath"])
+            if os.path.exists(md_file_path_absolute):
+                with open(md_file_path_absolute, "r", encoding="utf-8") as f:
+                    content = f.read()
+                return jsonify({
+                    "status": "success", "document_id": document_id, "markdown_content": content,
+                    "current_version_info": {
+                        "version_id": row["version_timestamp_id"],
+                        "summary": row["change_summary"],
+                        "timestamp": row["created_at"]
+                    }
+                }), 200
+            else: # DB points to a file that doesn't exist - data inconsistency!
+                 logger.error(f"Active content file missing for doc '{document_id}', session '{session_id}': {md_file_path_absolute}")
+                 return jsonify({"status": "error", "message": "Active content file missing on server (data inconsistency)."}), 500
+        else:
+            # No current_version_fk set, or document doesn't exist.
+            # Check if an "active_docs/doc.md" file exists as a fallback (e.g., from before DB or if current_version_fk is null)
+            active_doc_legacy_path = get_active_document_path(session_id, document_id)
+            if os.path.exists(active_doc_legacy_path):
+                with open(active_doc_legacy_path, "r", encoding="utf-8") as f:
+                    content = f.read()
+                return jsonify({"status": "success", "document_id": document_id, "markdown_content": content, "current_version_info": {"version_id": "N/A (legacy active file)"}}), 200
+            else:
+                return jsonify({"status": "success", "document_id": document_id, "markdown_content": "", "message": "No active content or versions found for this document."}), 200 # Or 404
+    except Exception as e:
+        return jsonify({"status": "error", "message": f"Error fetching active content: {str(e)}"}), 500
+    finally:
+        if conn: conn.close()
 if __name__ == '__main__':
+    print("Starting ASAVE API server...")
+    # Initialize the database and other components
+    print("Initializing database...")
+    initialize_database() # Initialize DB schema when app starts
+    print("Database initialized.")
     if not os.getenv("GOOGLE_API_KEY"):
         logger.critical("CRITICAL: GOOGLE_API_KEY environment variable not set. API will not function correctly.")
     app.run(host='0.0.0.0', port=5001, debug=False, threaded=True) # threaded=True is important for ThreadPoolExecutor with Flask dev server
