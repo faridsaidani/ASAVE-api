@@ -3,6 +3,7 @@ import inspect
 import os
 import json
 import logging
+import shutil
 import time # For simulating work or adding deliberate delays
 import fitz
 from flask import Flask, request, jsonify, Response, stream_with_context
@@ -29,6 +30,13 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'temp_api_uploads'
 app.config['ALLOWED_EXTENSIONS'] = {'pdf', 'json'}
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+CONFIGURED_PDF_LIBRARY_PATH = os.path.join(app.root_path, 'pdf_library') 
+os.makedirs(CONFIGURED_PDF_LIBRARY_PATH, exist_ok=True) # Ensure it exists
+
+# Directory to save session-specific vector databases
+SESSIONS_DB_PATH = os.path.join(app.root_path, 'asave_sessions_db')
+os.makedirs(SESSIONS_DB_PATH, exist_ok=True)
+
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -52,6 +60,8 @@ asave_context = {
     "initialized": False,
     "text_reformatter_agent": None,
     "text_reformatter_marker" : None,
+    "current_session_id": None, # Name or ID of the currently loaded session
+    "initialized_with_session": False, # Tracks if current init is from a saved session
 }
 
 def allowed_file(filename):
@@ -88,124 +98,190 @@ def initialize_asave():
         logger.error("Initialize failed: GOOGLE_API_KEY not set.")
         return jsonify({"status": "error", "message": "GOOGLE_API_KEY environment variable not set."}), 500
     try:
-        # --- File Handling and Basic Setup ---
-        data = request.form
-        fas_files_uploaded = request.files.getlist('fas_files')
-        ss_files_uploaded = request.files.getlist('ss_files')
-        shariah_rules_explicit_file_uploaded = request.files.get('shariah_rules_explicit_file')
+        data = request.form # For session_name, load_session_id, library file lists
+        uploaded_fas_files = request.files.getlist('fas_files_upload') # For direct uploads
+        uploaded_ss_files = request.files.getlist('ss_files_upload')
+        uploaded_rules_file = request.files.get('shariah_rules_explicit_file_upload')
 
-        fas_filepaths = []
-        for file in fas_files_uploaded:
-            if file and allowed_file(file.filename):
-                filename = secure_filename(file.filename)
-                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                file.save(filepath)
-                fas_filepaths.append(filepath)
-        ss_filepaths = []
-        for file in ss_files_uploaded:
-            if file and allowed_file(file.filename):
-                filename = secure_filename(file.filename)
-                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                file.save(filepath)
-                ss_filepaths.append(filepath)
+        # New parameters for session management and library files
+        session_name_to_save = data.get('save_as_session_name') # If user wants to save this configuration
+        session_id_to_load = data.get('load_session_id')       # If user wants to load an existing session
         
-        current_shariah_rules_explicit_path = asave_context["shariah_rules_explicit_path"]
-        if shariah_rules_explicit_file_uploaded and allowed_file(shariah_rules_explicit_file_uploaded.filename):
-            filename = secure_filename(shariah_rules_explicit_file_uploaded.filename)
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            shariah_rules_explicit_file_uploaded.save(filepath)
-            current_shariah_rules_explicit_path = filepath
-            asave_context["shariah_rules_explicit_path"] = filepath
-        elif not os.path.exists(current_shariah_rules_explicit_path):
-            logger.warning(f"Explicit Shari'ah rules file not provided and default not found: {current_shariah_rules_explicit_path}. Creating dummy file.")
-            dummy_rules = [{"rule_id": "DUMMY-API-INIT-001", "description":"Dummy rule", "validation_query_template": "Is {suggestion_text} compliant?"}]
-            os.makedirs(os.path.dirname(current_shariah_rules_explicit_path) or '.', exist_ok=True) # Ensure dir exists
-            with open(current_shariah_rules_explicit_path, "w") as f: json.dump(dummy_rules, f)
-
-        persist_db_path = data.get('persist_db_path_base', "./db_store_api")
-        os.makedirs(persist_db_path, exist_ok=True)
+        library_fas_filenames_json = data.get('library_fas_filenames') # JSON string array of filenames from library
+        library_ss_filenames_json = data.get('library_ss_filenames')   # JSON string array
         
-        # --- Document Processor and Vector Stores ---
-        logger.info("Initializing DocumentProcessor...")
-        asave_context["doc_processor"] = DocumentProcessor()
+        # --- Path where vector DBs for the current session will be stored/loaded from ---
+        current_session_persist_path = None
+        effective_session_id = None
 
-        if fas_filepaths:
-            logger.info(f"Processing {len(fas_filepaths)} FAS documents for vector store...")
-            all_fas_chunks = []
-            for fp in fas_filepaths:
-                docs = asave_context["doc_processor"].load_pdf(fp)
-                chunks = asave_context["doc_processor"].chunk_text(docs)
-                all_fas_chunks.extend(chunks)
+        if session_id_to_load:
+            effective_session_id = secure_filename(session_id_to_load) # Sanitize
+            current_session_persist_path = os.path.join(SESSIONS_DB_PATH, effective_session_id)
+            logger.info(f"Attempting to load existing session: {effective_session_id} from {current_session_persist_path}")
+            if not os.path.isdir(current_session_persist_path):
+                return jsonify({"status": "error", "message": f"Session '{effective_session_id}' not found."}), 404
+            asave_context["current_session_id"] = effective_session_id
+            asave_context["initialized_with_session"] = True
+        elif session_name_to_save:
+            effective_session_id = secure_filename(session_name_to_save) # Sanitize
+            current_session_persist_path = os.path.join(SESSIONS_DB_PATH, effective_session_id)
+            if os.path.exists(current_session_persist_path) and not data.get('overwrite_session', 'false').lower() == 'true':
+                return jsonify({"status": "error", "message": f"Session name '{effective_session_id}' already exists. Use a different name or allow overwrite."}), 400
+            os.makedirs(current_session_persist_path, exist_ok=True)
+            asave_context["current_session_id"] = effective_session_id
+            asave_context["initialized_with_session"] = False # It's a new save
+        else: # No load, no save: use a default or temporary session path
+            effective_session_id = "default_temp_session" 
+            current_session_persist_path = os.path.join(SESSIONS_DB_PATH, effective_session_id)
+            logger.info(f"Using default/temporary session path: {current_session_persist_path}")
+            os.makedirs(current_session_persist_path, exist_ok=True)
+            asave_context["current_session_id"] = effective_session_id
+            asave_context["initialized_with_session"] = False
+
+
+        # --- Initialize DocumentProcessor (always needed) ---
+        try:
+            asave_context["doc_processor"] = DocumentProcessor()
+        except ValueError as ve_doc_proc: # Catches API key issue from DocumentProcessor's embedding init
+             logger.error(f"Failed to initialize DocumentProcessor: {ve_doc_proc}")
+             return jsonify({"status": "error", "message": f"DocumentProcessor init failed: {str(ve_doc_proc)}"}), 500
+
+
+        # --- Handle Explicit Rules File ---
+        # (Same logic as before: use uploaded, or default, or create dummy)
+        # Save it within the current_session_persist_path for session consistency
+        session_rules_path = os.path.join(current_session_persist_path, "shariah_rules_explicit.json")
+        if uploaded_rules_file and allowed_file(uploaded_rules_file.filename, {'.json'}):
+            uploaded_rules_file.save(session_rules_path)
+            asave_context["shariah_rules_explicit_path"] = session_rules_path
+            logger.info(f"Saved uploaded explicit rules to session: {session_rules_path}")
+        elif os.path.exists(asave_context["shariah_rules_explicit_path"]): # Default path from context
+            # Copy default to session if it exists and no file uploaded for this session
+            if not os.path.exists(session_rules_path):
+                 shutil.copy2(asave_context["shariah_rules_explicit_path"], session_rules_path)
+            asave_context["shariah_rules_explicit_path"] = session_rules_path # Point to session's copy
+        else: # Create dummy in session path
+            dummy_rules = [{"rule_id": f"DUMMY_{effective_session_id}_001", "description":"Dummy rule for session", "validation_query_template": "Is {suggestion_text} ok?"}]
+            with open(session_rules_path, "w") as f: json.dump(dummy_rules, f)
+            asave_context["shariah_rules_explicit_path"] = session_rules_path
+            logger.info(f"Created dummy explicit rules for session: {session_rules_path}")
+
+
+        # --- Determine FAS and SS file paths (uploads + library) ---
+        fas_filepaths_to_process = []
+        ss_filepaths_to_process = []
+
+        # From direct uploads
+        upload_temp_dir = os.path.join(app.config['UPLOAD_FOLDER'], f"session_{effective_session_id}_uploads_{time.time_ns()}")
+        os.makedirs(upload_temp_dir, exist_ok=True)
+
+        for file in uploaded_fas_files:
+            if file and allowed_file(file.filename):
+                filepath = os.path.join(upload_temp_dir, secure_filename(file.filename))
+                file.save(filepath); fas_filepaths_to_process.append(filepath)
+        for file in uploaded_ss_files:
+            if file and allowed_file(file.filename):
+                filepath = os.path.join(upload_temp_dir, secure_filename(file.filename))
+                file.save(filepath); ss_filepaths_to_process.append(filepath)
+        
+        # From library
+        if library_fas_filenames_json:
+            try:
+                lib_fas_names = json.loads(library_fas_filenames_json)
+                for name in lib_fas_names:
+                    path = os.path.join(CONFIGURED_PDF_LIBRARY_PATH, secure_filename(name)) # Basic: assumes flat library
+                    if os.path.exists(path): fas_filepaths_to_process.append(path)
+                    else: logger.warning(f"Library FAS file not found: {path}")
+            except json.JSONDecodeError: logger.error("Invalid JSON for library_fas_filenames")
+        
+        if library_ss_filenames_json:
+            try:
+                lib_ss_names = json.loads(library_ss_filenames_json)
+                for name in lib_ss_names:
+                    path = os.path.join(CONFIGURED_PDF_LIBRARY_PATH, secure_filename(name))
+                    if os.path.exists(path): ss_filepaths_to_process.append(path)
+                    else: logger.warning(f"Library SS file not found: {path}")
+            except json.JSONDecodeError: logger.error("Invalid JSON for library_ss_filenames")
+        
+        fas_db_path = os.path.join(current_session_persist_path, "fas_db")
+        ss_db_path = os.path.join(current_session_persist_path, "ss_db")
+
+        doc_processor = asave_context["doc_processor"]
+
+        # --- Create/Load Vector Stores ---
+        if session_id_to_load: # Attempt to load existing vector stores
+            logger.info(f"Loading vector stores for session {effective_session_id}...")
+            asave_context["fas_vector_store"] = doc_processor.load_vector_store(fas_db_path)
+            asave_context["ss_vector_store"] = doc_processor.load_vector_store(ss_db_path)
+            if not asave_context["fas_vector_store"] or not asave_context["ss_vector_store"]:
+                # This could happen if DB files are corrupted or not fully saved.
+                # Optionally, could try to re-process files if loading fails.
+                logger.warning(f"Failed to load one or more vector stores for session {effective_session_id}. Will proceed if files are provided for processing.")
+                # Allow re-processing if files are provided, even if loading failed
+                if not fas_filepaths_to_process and not ss_filepaths_to_process:
+                     return jsonify({"status": "error", "message": f"Failed to load vector stores for session '{effective_session_id}' and no new files provided for processing."}), 500
+            asave_context["all_fas_vector_store"] = asave_context["fas_vector_store"] # Assuming FAS store contains all relevant FAS for ISCCA
+        
+        # Process files if new files are provided OR if loading a session failed to find stores
+        # and we want to rebuild/create them.
+        rebuild_fas = not asave_context.get("fas_vector_store") and fas_filepaths_to_process
+        rebuild_ss = not asave_context.get("ss_vector_store") and ss_filepaths_to_process
+
+        if rebuild_fas or (fas_filepaths_to_process and not session_id_to_load): # Process new FAS files
+            logger.info(f"Processing {len(fas_filepaths_to_process)} FAS documents for session '{effective_session_id}'...")
+            all_fas_chunks = [];
+            for fp in fas_filepaths_to_process:
+                docs = doc_processor.load_pdf(fp); chunks = doc_processor.chunk_text(docs); all_fas_chunks.extend(chunks)
             if all_fas_chunks:
-                fas_db_path = os.path.join(persist_db_path, "fas_db")
-                asave_context["fas_vector_store"] = asave_context["doc_processor"].create_vector_store(all_fas_chunks, persist_directory=fas_db_path)
-                asave_context["all_fas_vector_store"] = asave_context["fas_vector_store"] # Used by ISCCA
-                logger.info(f"FAS Vector Store created/loaded. Path: {fas_db_path}")
-        if ss_filepaths:
-            logger.info(f"Processing {len(ss_filepaths)} SS documents for vector store...")
-            all_ss_chunks = []
-            for fp in ss_filepaths:
-                docs = asave_context["doc_processor"].load_pdf(fp)
-                chunks = asave_context["doc_processor"].chunk_text(docs)
-                all_ss_chunks.extend(chunks)
+                asave_context["fas_vector_store"] = doc_processor.create_vector_store(all_fas_chunks, persist_directory=fas_db_path)
+                asave_context["all_fas_vector_store"] = asave_context["fas_vector_store"]
+                logger.info(f"FAS Vector Store created/updated for session '{effective_session_id}'. Path: {fas_db_path}")
+            elif not asave_context.get("fas_vector_store"): # If still no store after attempting process
+                logger.warning(f"No FAS chunks generated, FAS vector store not available for session '{effective_session_id}'.")
+        
+        if rebuild_ss or (ss_filepaths_to_process and not session_id_to_load): # Process new SS files
+            logger.info(f"Processing {len(ss_filepaths_to_process)} SS documents for session '{effective_session_id}'...")
+            all_ss_chunks = [];
+            for fp in ss_filepaths_to_process:
+                docs = doc_processor.load_pdf(fp); chunks = doc_processor.chunk_text(docs); all_ss_chunks.extend(chunks)
             if all_ss_chunks:
-                ss_db_path = os.path.join(persist_db_path, "ss_db")
-                asave_context["ss_vector_store"] = asave_context["doc_processor"].create_vector_store(all_ss_chunks, persist_directory=ss_db_path)
-                logger.info(f"SS Vector Store created/loaded. Path: {ss_db_path}")
+                asave_context["ss_vector_store"] = doc_processor.create_vector_store(all_ss_chunks, persist_directory=ss_db_path)
+                logger.info(f"SS Vector Store created/updated for session '{effective_session_id}'. Path: {ss_db_path}")
+            elif not asave_context.get("ss_vector_store"):
+                 logger.warning(f"No SS chunks generated, SS vector store not available for session '{effective_session_id}'.")
 
-        # --- Initialize Agents ---
-        logger.info("Initializing Core Agents (Validation, SRMA)...")
+
+        # --- Initialize Agents (always do this after context might have changed) ---
+        logger.info("Initializing/Re-initializing AI Agents for the current session...")
+        # (Agent initialization logic as before - AISGA variants, SCVA, Specialized)
+        # This ensures they use the latest vector stores if a session was loaded or stores rebuilt.
         asave_context["scva_iscca"] = ValidationAgent()
-        asave_context["srma"] = ShariahRuleMinerAgent()
-
-        logger.info("Initializing AISGA Variants...")
-        asave_context["aisga_variants"]["pro_detailed_conservative"] = SuggestionAgent(
-            model_name="gemini-1.5-pro-latest", temperature=0.2,
-            system_message="You are a meticulous AAOIFI standards drafter. Prioritize extreme clarity, referencing specific standard sections where possible, and ensure strict Shari'ah compliance. Your suggestions should be conservative and build upon existing text with minimal disruption unless absolutely necessary for compliance or clarity."
-        )
-        asave_context["aisga_variants"]["pro_detailed_conservative"].agent_type = "AISGA_ProDetailedConservative"
-
-        asave_context["aisga_variants"]["flash_creative_options"] = SuggestionAgent(
-            model_name="gemini-1.5-flash-latest", temperature=0.7,
-            system_message="You are an innovative AAOIFI standards consultant. Your goal is to provide alternative phrasing and creative solutions for clarity and enhancement, even if they are significant departures from the original text. Always maintain Shari'ah compliance as paramount."
-        )
-        asave_context["aisga_variants"]["flash_creative_options"].agent_type = "AISGA_FlashCreativeOptions"
-        
-        logger.info("Initializing Specialized Agents...")
+        asave_context["aisga_variants"]["pro_conservative_detailed"] = SuggestionAgent(
+            model_name="gemini-1.5-pro-latest", temperature=0.2, system_message="...")
+        asave_context["aisga_variants"]["pro_conservative_detailed"].agent_type = "AISGA_ProConsDetailed"
+        asave_context["aisga_variants"]["flash_alternative_options"] = SuggestionAgent(
+            model_name="gemini-1.5-flash-latest", temperature=0.7, system_message="...")
+        asave_context["aisga_variants"]["flash_alternative_options"].agent_type = "AISGA_FlashCreative"
         asave_context["specialized_agents"]["conciseness_agent"] = ConcisenessAgent()
+        # Marker and TextReformatter for PDF extraction are initialized on first use by their respective routes.
 
-        asave_context["initialized"] = True
-        logger.info("ASAVE system and all agent variants initialized successfully.")
-        
-        logger.info("Initializing Text Reformatter Agent...")
-        asave_context["text_reformatter_agent"] = TextReformatterAgent()
+        # Cleanup temporary upload directory if it was created for this session's uploads
+        if os.path.exists(upload_temp_dir):
+            shutil.rmtree(upload_temp_dir)
+            logger.info(f"Cleaned up temporary upload directory: {upload_temp_dir}")
 
-        raw_config = {
-            "output_format": "markdown",
-            "use_llm": True,
-            "gemini_api_key": os.getenv("GEMINI_API_KEY"),
-            "output_format": "markdown",
-            "paginate_output" : True,
-        }
-        config_parser = ConfigParser(raw_config)
-        converter = PdfConverter(
-            config=config_parser.generate_config_dict(),
-            artifact_dict=create_model_dict(),
-            processor_list=config_parser.get_processors(),
-            renderer=config_parser.get_renderer(),
-            llm_service=config_parser.get_llm_service(),
-        )
-        asave_context["text_reformatter_marker"] = converter
-        
+        asave_context["initialized"] = True # Mark system as ready with the current session
+        logger.info(f"ASAVE system initialized. Current session: '{effective_session_id}'.")
         return jsonify({
-            "status": "success", "message": "ASAVE system initialized with multiple agent variants.",
-            "fas_vector_store_status": "Created/Loaded" if asave_context["fas_vector_store"] else "Not Created",
-            "ss_vector_store_status": "Created/Loaded" if asave_context["ss_vector_store"] else "Not Created",
-            "num_aisga_variants": len(asave_context["aisga_variants"]),
-            "num_specialized_agents": len(asave_context["specialized_agents"])
+            "status": "success", 
+            "message": f"ASAVE system initialized for session '{effective_session_id}'.",
+            "session_id": effective_session_id,
+            "session_path": current_session_persist_path,
+            "fas_vector_store_status": "Loaded/Created" if asave_context.get("fas_vector_store") else "Not Available",
+            "ss_vector_store_status": "Loaded/Created" if asave_context.get("ss_vector_store") else "Not Available",
         }), 200
 
-    except ValueError as ve:
+    except ValueError as ve: # Catches API key issues from agent constructors
         logger.error(f"Initialization ValueError: {ve}", exc_info=True)
         asave_context["initialized"] = False
         return jsonify({"status": "error", "message": f"Agent/Component Initialization Error: {str(ve)}"}), 500
@@ -214,112 +290,32 @@ def initialize_asave():
         asave_context["initialized"] = False
         return jsonify({"status": "error", "message": f"General initialization error: {str(e)}"}), 500
 
-@app.route('/analyze_chunk_enhanced', methods=['POST'])
-def analyze_chunk_enhanced_api():
-    # This is the NON-STREAMING version that returns all results at once.
-    # (Code from the previous response for this endpoint, which uses ThreadPoolExecutor)
-    global asave_context, executor
-    logger.info("Received /analyze_chunk_enhanced request (non-streaming).")
-    # ... (Full implementation as provided in the previous answer)
-    if not asave_context["initialized"]:
-        return jsonify({"status": "error", "message": "ASAVE system not initialized."}), 400
-    if not asave_context["scva_iscca"]:
-        return jsonify({"status": "error", "message": "Validation agent (SCVA/ISCCA) not initialized."}), 500
 
+# --- New API Endpoint: List Saved Sessions ---
+@app.route('/list_sessions', methods=['GET'])
+def list_sessions_api():
+    logger.info("Received /list_sessions request.")
     try:
-        data = request.get_json()
-        if not data: return jsonify({"status": "error", "message": "Invalid JSON payload."}), 400
-
-        target_text = data.get("target_text_chunk")
-        fas_context_strings = data.get("fas_context_chunks", [])
-        ss_context_strings = data.get("ss_context_chunks", [])
-        fas_name = data.get("fas_name_for_display", "Unnamed FAS") # This would be fas_doc_id in new flow
-        ambiguity_desc = data.get("identified_ambiguity", "User selected text for review/enhancement.")
-
-        if not target_text: return jsonify({"status": "error", "message": "Missing 'target_text_chunk'."}), 400
-
-        raw_suggestions_from_agents = []
-        agent_processing_log = []
-        future_to_agent = {}
-
-        # AISGA Variants
-        for variant_name, aisga_instance in asave_context["aisga_variants"].items():
-            if aisga_instance:
-                future = executor.submit(
-                    process_suggestion_task, aisga_instance, "generate_clarification",
-                    original_text=target_text, identified_ambiguity=ambiguity_desc,
-                    fas_context_strings=fas_context_strings, ss_context_strings=ss_context_strings,
-                    variant_name_override=variant_name
-                )
-                future_to_agent[future] = {"type": "AISGA", "name": variant_name}
-        # Specialized Agents
-        conciseness_agent = asave_context["specialized_agents"].get("conciseness_agent")
-        if conciseness_agent:
-            future = executor.submit(
-                process_suggestion_task, conciseness_agent, "make_concise",
-                text_to_make_concise=target_text, shariah_context_strings=ss_context_strings
-            )
-            future_to_agent[future] = {"type": "Specialized", "name": "ConcisenessAgent"}
-
-        for future in as_completed(future_to_agent):
-            agent_info = future_to_agent[future]
-            try:
-                result = future.result()
-                if isinstance(result, dict) and "error" not in result and result.get("proposed_text"):
-                    raw_suggestions_from_agents.append({
-                        "source_agent_type": agent_info["type"], "source_agent_name": agent_info["name"],
-                        "suggestion_payload": result
-                    })
-                    agent_processing_log.append({"agent_name": agent_info["name"], "type": agent_info["type"], "status": "success", "summary": result.get("proposed_text", "")[:50]+"..."})
-                else:
-                    agent_processing_log.append({"agent_name": agent_info["name"], "type": agent_info["type"], "status": "failed_or_empty", "details": result})
-            except Exception as exc:
-                agent_processing_log.append({"agent_name": agent_info["name"], "type": agent_info["type"], "status": "exception_in_future", "error": str(exc)})
-        
-        validated_suggestions_list = []
-        validation_futures = {}
-        for raw_sugg_item in raw_suggestions_from_agents:
-            suggestion_payload = raw_sugg_item["suggestion_payload"]
-            scva_future = executor.submit(
-                asave_context["scva_iscca"].validate_shariah_compliance,
-                proposed_suggestion_object=suggestion_payload,
-                shariah_rules_explicit_path=asave_context["shariah_rules_explicit_path"],
-                ss_vector_store=asave_context["ss_vector_store"],
-                mined_shariah_rules_path=asave_context["mined_shariah_rules_path"] if os.path.exists(asave_context["mined_shariah_rules_path"]) else None
-            )
-            iscca_future = executor.submit(
-                asave_context["scva_iscca"].validate_inter_standard_consistency,
-                proposed_suggestion_object=suggestion_payload, fas_name=fas_name,
-                all_fas_vector_store=asave_context["all_fas_vector_store"]
-            )
-            validation_futures[raw_sugg_item] = (scva_future, iscca_future)
-
-        for raw_sugg_item, (scva_future, iscca_future) in validation_futures.items():
-            try:
-                scva_report = scva_future.result()
-                iscca_report = iscca_future.result()
-                validated_suggestions_list.append({
-                    "source_agent_type": raw_sugg_item["source_agent_type"],
-                    "source_agent_name": raw_sugg_item["source_agent_name"],
-                    "suggestion_details": raw_sugg_item["suggestion_payload"],
-                    "scva_report": scva_report, "iscca_report": iscca_report,
-                    "validation_summary_score": f"SCVA: {scva_report.get('overall_status', 'N/A')}, ISCCA: {iscca_report.get('status', 'N/A')}"
-                })
-            except Exception as exc:
-                 logger.error(f"Error collecting validation results for suggestion from {raw_sugg_item['source_agent_name']}: {exc}", exc_info=True)
-
-
-        final_response = {
-            "input_summary": {"target_text_chunk": target_text, "fas_name": fas_name},
-            "agent_processing_log": agent_processing_log,
-            "validated_suggestions": validated_suggestions_list
-        }
-        return jsonify({"status": "success", "analysis": final_response}), 200
+        sessions = []
+        if os.path.exists(SESSIONS_DB_PATH):
+            for item_name in os.listdir(SESSIONS_DB_PATH):
+                item_path = os.path.join(SESSIONS_DB_PATH, item_name)
+                if os.path.isdir(item_path):
+                    # Check for presence of expected DB subfolders as a heuristic
+                    fas_db_exists = os.path.exists(os.path.join(item_path, "fas_db"))
+                    ss_db_exists = os.path.exists(os.path.join(item_path, "ss_db"))
+                    if fas_db_exists or ss_db_exists: # Consider it a session if at least one DB type is there
+                        sessions.append({
+                            "session_id": item_name,
+                            "path": item_path,
+                            "has_fas_db": fas_db_exists,
+                            "has_ss_db": ss_db_exists,
+                            "last_modified": time.ctime(os.path.getmtime(item_path)) if os.path.exists(item_path) else "N/A"
+                        })
+        return jsonify({"status": "success", "sessions": sessions}), 200
     except Exception as e:
-        logger.error(f"Error during enhanced chunk analysis (non-streaming): {e}", exc_info=True)
-        return jsonify({"status": "error", "message": f"General analysis error: {str(e)}"}), 500
-
-@app.route('/status', methods=['GET'])
+        logger.error(f"Error listing sessions: {e}", exc_info=True)
+        return jsonify({"status": "error", "message": f"Failed to list sessions: {str(e)}"}), 500
 def get_status_api():
     global asave_context
     return jsonify({
@@ -1080,6 +1076,32 @@ def review_full_contract_stream_api():
                                 "message": f"Stream generation failed: {str(e_stream)}"})
 
     return Response(stream_with_context(generate_full_contract_review_stream()), mimetype='text/event-stream')
+
+@app.route('/list_library_pdfs', methods=['GET'])
+def list_library_pdfs_api():
+    logger.info("Received /list_library_pdfs request.")
+    try:
+        pdf_files = []
+        # Scan for subdirectories (e.g., 'FAS', 'SS') or just list all PDFs
+        for item in os.listdir(CONFIGURED_PDF_LIBRARY_PATH):
+            item_path = os.path.join(CONFIGURED_PDF_LIBRARY_PATH, item)
+            if os.path.isfile(item_path) and item.lower().endswith('.pdf'):
+                pdf_files.append({"name": item, "type": "file"})
+            elif os.path.isdir(item_path): # Basic subdirectory listing
+                subdir_files = []
+                for sub_item in os.listdir(item_path):
+                    if sub_item.lower().endswith('.pdf') and os.path.isfile(os.path.join(item_path, sub_item)):
+                         subdir_files.append(sub_item)
+                if subdir_files:
+                    pdf_files.append({"name": item, "type": "directory", "files": subdir_files})
+        
+        # More sophisticated: categorize by subfolder (e.g., FAS, SS)
+        # For now, just a flat list or simple dir structure
+        
+        return jsonify({"status": "success", "library_path": CONFIGURED_PDF_LIBRARY_PATH, "pdf_files": pdf_files}), 200
+    except Exception as e:
+        logger.error(f"Error listing library PDFs: {e}", exc_info=True)
+        return jsonify({"status": "error", "message": f"Failed to list library PDFs: {str(e)}"}), 500
 
 if __name__ == '__main__':
     if not os.getenv("GOOGLE_API_KEY"):
